@@ -6,7 +6,7 @@ const corsHeaders = {
 }
 
 interface WhatsAppMessage {
-  group_id: string;
+  number: string;
   type: string;
   message: string;
   instance_id: string;
@@ -19,32 +19,28 @@ serve(async (req) => {
   }
 
   try {
-    const { message, recipient_type, student_name, admin_group_id } = await req.json()
+    const { message, recipient_type, student_name, phone_number, admin_phone } = await req.json()
     
-    const instance_id = Deno.env.get('WHATSAPP_INSTANCE_ID')
-    const access_token = Deno.env.get('WHATSAPP_ACCESS_TOKEN')
-    const student_group_id = Deno.env.get('WHATSAPP_STUDENT_GROUP_ID')
-    const admin_group_id_env = Deno.env.get('WHATSAPP_ADMIN_GROUP_ID')
+    // استخدام البيانات مباشرة كما طلبت
+    const instance_id = "6848073DE839C"
+    const access_token = "660f1622e1665"
+    const admin_phone_number = admin_phone || "84933313xxx" // رقم الأدمن الافتراضي
 
-    if (!instance_id || !access_token) {
-      throw new Error('Missing WhatsApp API credentials')
-    }
-
-    let target_group_id = '';
+    let target_phone = '';
     let full_message = '';
 
     if (recipient_type === 'student') {
-      target_group_id = student_group_id || '';
+      target_phone = phone_number || '';
       full_message = `مرحباً ${student_name || ''}،\n\n${message}`;
     } else if (recipient_type === 'admin') {
-      target_group_id = admin_group_id || admin_group_id_env || '';
+      target_phone = admin_phone_number;
       full_message = message;
     }
 
-    if (!target_group_id) {
-      console.warn('No group ID found for recipient type:', recipient_type)
+    if (!target_phone) {
+      console.warn('No phone number provided for recipient type:', recipient_type)
       return new Response(
-        JSON.stringify({ success: false, error: 'No group ID configured' }), 
+        JSON.stringify({ success: false, error: 'No phone number provided' }), 
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400 
@@ -53,7 +49,7 @@ serve(async (req) => {
     }
 
     const whatsappPayload: WhatsAppMessage = {
-      group_id: target_group_id,
+      number: target_phone,
       type: "text",
       message: full_message,
       instance_id: instance_id,
@@ -62,7 +58,7 @@ serve(async (req) => {
 
     console.log('Sending WhatsApp message:', whatsappPayload)
 
-    const response = await fetch('https://automapi.com/api/send_group', {
+    const response = await fetch('https://automapi.com/api/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

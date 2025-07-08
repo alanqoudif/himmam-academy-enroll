@@ -134,13 +134,15 @@ export default function EnrollmentForm() {
     return publicUrl;
   };
 
-  const sendWhatsAppNotification = async (type: 'student' | 'admin', message: string, studentName?: string) => {
+  const sendWhatsAppNotification = async (type: 'student' | 'admin', message: string, studentName?: string, phoneNumber?: string) => {
     try {
       await supabase.functions.invoke('send-whatsapp-notification', {
         body: {
           message,
           recipient_type: type,
-          student_name: studentName
+          student_name: studentName,
+          phone_number: phoneNumber,
+          admin_phone: "84933313xxx" // رقم الأدمن - يمكنك تغييره
         }
       });
     } catch (error) {
@@ -201,7 +203,8 @@ export default function EnrollmentForm() {
         sendWhatsAppNotification(
           'student',
           'تم استلام طلب التسجيل الخاص بك في أكاديمية همم التعليمية. سيتم مراجعة طلبك والرد عليك في أقرب وقت ممكن.',
-          formData.fullName
+          formData.fullName,
+          formData.phone
         ),
         sendWhatsAppNotification(
           'admin',
