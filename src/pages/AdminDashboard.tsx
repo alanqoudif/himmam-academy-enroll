@@ -251,10 +251,20 @@ export default function AdminDashboard() {
 
       // تحديث الحالة في القائمة فوراً
       setEnrollments(prev => prev.map(e => 
-        e.id === id ? { ...e, status, reviewed_by: 'admin', reviewed_at: new Date().toISOString() } : e
+        e.id === id ? { 
+          ...e, 
+          status, 
+          reviewed_by: 'admin', 
+          reviewed_at: new Date().toISOString(),
+          rejection_reason: status === 'rejected' ? reason : null,
+          access_credentials: status === 'approved' ? `تم قبول طلبك! يمكنك الآن الوصول للدروس عبر الرابط...` : null
+        } : e
       ));
       
-      await fetchEnrollments(); // إعادة تحميل البيانات للتأكد
+      // إعادة تحميل البيانات للتأكد (بعد تأخير قصير)
+      setTimeout(() => {
+        fetchEnrollments();
+      }, 500);
       setIsDetailModalOpen(false);
       setRejectionReason("");
 
