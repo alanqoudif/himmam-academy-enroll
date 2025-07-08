@@ -495,15 +495,6 @@ export default function EnrollmentForm() {
                     </ul>
                   </div>
 
-                  <div className="text-center">
-                    <Button 
-                      onClick={() => navigate('/admin')}
-                      variant="outline"
-                      className="text-accent border-accent hover:bg-accent hover:text-accent-foreground"
-                    >
-                      لوحة التحكم (للأدمن)
-                    </Button>
-                  </div>
                 </div>
               </CardContent>
             </Card>

@@ -202,6 +202,10 @@ export default function AdminDashboard() {
     document.body.removeChild(link);
   };
 
+  const viewReceiptInModal = (receiptUrl: string) => {
+    window.open(receiptUrl, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+  };
+
   const stats = {
     total: enrollments.length,
     pending: enrollments.filter(e => e.status === 'pending').length,
@@ -450,7 +454,7 @@ export default function AdminDashboard() {
                         </Button>
                         <Button
                           variant="outline"
-                          onClick={() => window.open(selectedEnrollment.receipt_url, '_blank')}
+                          onClick={() => viewReceiptInModal(selectedEnrollment.receipt_url!)}
                         >
                           <Eye className="w-4 h-4 mr-2" />
                           عرض الإيصال

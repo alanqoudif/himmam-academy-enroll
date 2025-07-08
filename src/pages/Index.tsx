@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCap, BookOpen, Users, Award, ArrowLeft, Settings } from "lucide-react";
+import { GraduationCap, BookOpen, Users, Award, ArrowLeft } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ const Index = () => {
             منصة تعليمية متميزة تهدف إلى تطوير قدرات الطلاب وتحقيق التفوق الأكاديمي من خلال أساليب تعليمية حديثة ومبتكرة
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Button 
               onClick={() => navigate('/enroll')}
               size="lg"
@@ -31,15 +31,6 @@ const Index = () => {
               سجل الآن
             </Button>
             
-            <Button 
-              onClick={() => navigate('/admin')}
-              variant="outline"
-              size="lg"
-              className="text-accent border-accent hover:bg-accent hover:text-accent-foreground px-8 py-4 text-lg"
-            >
-              <Settings className="w-6 h-6 mr-2" />
-              لوحة التحكم
-            </Button>
           </div>
         </div>
 
