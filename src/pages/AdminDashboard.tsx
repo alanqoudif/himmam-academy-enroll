@@ -204,7 +204,6 @@ export default function AdminDashboard() {
 
       const updateData: any = {
         status,
-        reviewed_by: 'admin',
         reviewed_at: new Date().toISOString()
       };
 
@@ -252,7 +251,6 @@ export default function AdminDashboard() {
         e.id === id ? { 
           ...e, 
           status, 
-          reviewed_by: 'admin', 
           reviewed_at: new Date().toISOString(),
           rejection_reason: status === 'rejected' ? reason : null,
           access_credentials: status === 'approved' ? `تم قبول طلبك! يمكنك الآن الوصول للدروس عبر الرابط...` : null
