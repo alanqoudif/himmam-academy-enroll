@@ -42,7 +42,7 @@ export default function EnrollmentForm() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const grades = [5, 6, 7, 8, 9, 10, 11];
+  const grades = [5, 6, 7, 8, 9, 10, 11, 12];
 
   useEffect(() => {
     fetchBankInfo();

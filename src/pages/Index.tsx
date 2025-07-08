@@ -45,7 +45,7 @@ const Index = () => {
             </CardHeader>
             <CardContent className="text-center">
               <p className="text-muted-foreground">
-                مناهج تعليمية شاملة تغطي جميع المراحل الدراسية من الصف الخامس إلى الحادي عشر
+                مناهج تعليمية شاملة تغطي جميع المراحل الدراسية من الصف الخامس إلى الثاني عشر
               </p>
             </CardContent>
           </Card>
@@ -82,11 +82,11 @@ const Index = () => {
         {/* Pricing Section */}
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-accent mb-8">خطط الأسعار</h2>
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <Card className="shadow-medium border-0 relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-primary"></div>
               <CardHeader className="text-center pt-8">
-                <CardTitle className="text-2xl text-accent">الصفوف 5-9</CardTitle>
+                <CardTitle className="text-2xl text-accent">الصفوف 5-8</CardTitle>
                 <div className="text-4xl font-bold text-academy-orange my-4">5 ر.ع</div>
                 <p className="text-muted-foreground">للمادة الواحدة</p>
               </CardHeader>
@@ -113,8 +113,8 @@ const Index = () => {
             <Card className="shadow-medium border-0 relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-secondary"></div>
               <CardHeader className="text-center pt-8">
-                <CardTitle className="text-2xl text-accent">الصفوف 10-11</CardTitle>
-                <div className="text-4xl font-bold text-academy-red my-4">10 ر.ع</div>
+                <CardTitle className="text-2xl text-accent">الصف التاسع</CardTitle>
+                <div className="text-4xl font-bold text-academy-red my-4">5 ر.ع</div>
                 <p className="text-muted-foreground">للمادة الواحدة</p>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -132,6 +132,33 @@ const Index = () => {
                 </div>
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-academy-red rounded-full mr-3"></div>
+                  <span>خصم طلاب الضمان</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-medium border-0 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-primary"></div>
+              <CardHeader className="text-center pt-8">
+                <CardTitle className="text-2xl text-accent">الصفوف 10-12</CardTitle>
+                <div className="text-4xl font-bold text-academy-purple my-4">10 ر.ع</div>
+                <p className="text-muted-foreground">للمادة الواحدة</p>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center">
+                  <div className="w-2 h-2 bg-academy-purple rounded-full mr-3"></div>
+                  <span>دعم غير محدود</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-2 h-2 bg-academy-purple rounded-full mr-3"></div>
+                  <span>تسجيلات الحصص</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-2 h-2 bg-academy-purple rounded-full mr-3"></div>
+                  <span>مراجعات نهائية</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-2 h-2 bg-academy-purple rounded-full mr-3"></div>
                   <span>خصم طلاب الضمان</span>
                 </div>
               </CardContent>

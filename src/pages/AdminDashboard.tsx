@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -19,7 +20,8 @@ import {
   BookOpen,
   ArrowLeft,
   Download,
-  MessageSquare
+  MessageSquare,
+  LogOut
 } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -50,18 +52,60 @@ export default function AdminDashboard() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
+  const [showPasswordForm, setShowPasswordForm] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const ADMIN_PASSWORD = "admin2025";
+
   useEffect(() => {
-    checkAuth();
-    fetchEnrollments();
+    // فحص إذا كان المستخدم مسجل دخول من localStorage
+    const isLoggedIn = localStorage.getItem('admin_authenticated') === 'true';
+    if (isLoggedIn) {
+      setIsAuthenticated(true);
+      setShowPasswordForm(false);
+      fetchEnrollments();
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   const checkAuth = async () => {
     // تم إزالة فحص Authentication مؤقتاً لحل مشكلة 404
     // يمكن إضافته لاحقاً عند الحاجة
     console.log('Admin access - authentication check bypassed');
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+      setShowPasswordForm(false);
+      localStorage.setItem('admin_authenticated', 'true');
+      fetchEnrollments();
+      toast({
+        title: "تم تسجيل الدخول بنجاح",
+        description: "مرحباً بك في لوحة تحكم الأدمن"
+      });
+    } else {
+      toast({
+        title: "خطأ",
+        description: "كلمة المرور غير صحيحة",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setShowPasswordForm(true);
+    localStorage.removeItem('admin_authenticated');
+    toast({
+      title: "تم تسجيل الخروج",
+      description: "شكراً لك"
+    });
   };
 
   const fetchEnrollments = async () => {
@@ -213,6 +257,44 @@ export default function AdminDashboard() {
     rejected: enrollments.filter(e => e.status === 'rejected').length
   };
 
+  if (showPasswordForm) {
+    return (
+      <div className="min-h-screen bg-gradient-accent font-arabic flex items-center justify-center" dir="rtl">
+        <Card className="w-full max-w-md shadow-strong">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl text-accent">تسجيل دخول الأدمن</CardTitle>
+            <p className="text-muted-foreground">أدخل كلمة المرور للوصول للوحة التحكم</p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <div>
+                <Input
+                  type="password"
+                  placeholder="كلمة المرور"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="text-center"
+                />
+              </div>
+              <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90 text-white">
+                دخول
+              </Button>
+              <Button 
+                type="button"
+                variant="outline" 
+                onClick={() => navigate('/')}
+                className="w-full"
+              >
+                العودة للصفحة الرئيسية
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-accent font-arabic flex items-center justify-center" dir="rtl">
@@ -233,14 +315,24 @@ export default function AdminDashboard() {
             <h1 className="text-3xl font-bold text-accent">لوحة تحكم الأدمن</h1>
             <p className="text-muted-foreground">إدارة طلبات التسجيل في أكاديمية همم</p>
           </div>
-          <Button 
-            onClick={() => navigate('/')}
-            variant="outline"
-            className="text-accent border-accent hover:bg-accent hover:text-accent-foreground"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            العودة للصفحة الرئيسية
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleLogout}
+              variant="outline"
+              className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              تسجيل الخروج
+            </Button>
+            <Button 
+              onClick={() => navigate('/')}
+              variant="outline"
+              className="text-accent border-accent hover:bg-accent hover:text-accent-foreground"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              العودة للصفحة الرئيسية
+            </Button>
+          </div>
         </div>
 
         {/* Statistics Cards */}
