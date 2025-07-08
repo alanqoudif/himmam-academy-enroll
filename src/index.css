@@ -9,32 +9,51 @@ All colors MUST be HSL.
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 240 10% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 240 10% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 240 10% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* أكاديمية همم - البرتقالي الرئيسي */
+    --primary: 46 92% 57%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* أكاديمية همم - الأحمر الثانوي */
+    --secondary: 9 75% 61%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 0 0% 97%;
+    --muted-foreground: 240 5% 50%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* أكاديمية همم - البنفسجي الغامق */
+    --accent: 259 37% 34%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 46 92% 57%;
+
+    /* ألوان مخصصة لأكاديمية همم */
+    --academy-orange: 46 92% 57%;
+    --academy-red: 9 75% 61%;
+    --academy-purple: 259 37% 34%;
+    --academy-light: 0 0% 97%;
+
+    /* تدرجات جميلة */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--academy-orange)), hsl(var(--academy-red)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--academy-purple)), hsl(var(--academy-red)));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--academy-light)), hsl(var(--background)));
+
+    /* ظلال أنيقة */
+    --shadow-soft: 0 4px 12px hsl(var(--academy-orange) / 0.15);
+    --shadow-medium: 0 8px 25px hsl(var(--academy-purple) / 0.2);
+    --shadow-strong: 0 12px 40px hsl(var(--academy-red) / 0.25);
 
     --radius: 0.5rem;
 

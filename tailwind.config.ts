@@ -61,7 +61,28 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// ألوان أكاديمية همم المخصصة
+				academy: {
+					orange: 'hsl(var(--academy-orange))',
+					red: 'hsl(var(--academy-red))',
+					purple: 'hsl(var(--academy-purple))',
+					light: 'hsl(var(--academy-light))'
 				}
+			},
+			backgroundImage: {
+				'gradient-primary': 'var(--gradient-primary)',
+				'gradient-secondary': 'var(--gradient-secondary)',
+				'gradient-accent': 'var(--gradient-accent)'
+			},
+			boxShadow: {
+				'soft': 'var(--shadow-soft)',
+				'medium': 'var(--shadow-medium)',
+				'strong': 'var(--shadow-strong)'
+			},
+			fontFamily: {
+				'arabic': ['Cairo', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+				'english': ['Roboto', 'ui-sans-serif', 'system-ui', 'sans-serif']
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

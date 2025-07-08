@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      bank_transfer_settings: {
+        Row: {
+          account_name: string
+          account_number: string
+          additional_info: string | null
+          bank_name: string
+          branch_name: string | null
+          created_at: string
+          iban: string | null
+          id: string
+          is_active: boolean
+          swift_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          additional_info?: string | null
+          bank_name?: string
+          branch_name?: string | null
+          created_at?: string
+          iban?: string | null
+          id?: string
+          is_active?: boolean
+          swift_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          additional_info?: string | null
+          bank_name?: string
+          branch_name?: string | null
+          created_at?: string
+          iban?: string | null
+          id?: string
+          is_active?: boolean
+          swift_code?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lesson_views: {
         Row: {
           completed: boolean | null
@@ -254,6 +296,93 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      student_enrollments: {
+        Row: {
+          access_credentials: string | null
+          bank_transfer_details: string | null
+          created_at: string
+          email: string
+          full_name: string
+          grade: number
+          id: string
+          phone: string
+          receipt_url: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          selected_subjects: string[]
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          access_credentials?: string | null
+          bank_transfer_details?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          grade: number
+          id?: string
+          phone: string
+          receipt_url?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selected_subjects: string[]
+          status?: string
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          access_credentials?: string | null
+          bank_transfer_details?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          grade?: number
+          id?: string
+          phone?: string
+          receipt_url?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selected_subjects?: string[]
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subjects_pricing: {
+        Row: {
+          created_at: string
+          grade: number
+          id: string
+          is_active: boolean
+          price_per_subject: number
+          subject_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          grade: number
+          id?: string
+          is_active?: boolean
+          price_per_subject: number
+          subject_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          grade?: number
+          id?: string
+          is_active?: boolean
+          price_per_subject?: number
+          subject_name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_assignments: {
         Row: {
