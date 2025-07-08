@@ -142,7 +142,7 @@ export default function EnrollmentForm() {
           recipient_type: type,
           student_name: studentName,
           phone_number: phoneNumber,
-          admin_phone: "84933313xxx" // رقم الأدمن - يمكنك تغييره
+          admin_phone: phoneNumber // استخدام الرقم الممرر
         }
       });
     } catch (error) {
@@ -210,6 +210,15 @@ export default function EnrollmentForm() {
       // إرسال إشعارات الواتساب
       console.log('Sending WhatsApp notifications...');
       try {
+        // الحصول على رقم الأدمن من قاعدة البيانات
+        const { data: adminSettings } = await supabase
+          .from('admin_settings')
+          .select('setting_value')
+          .eq('setting_key', 'admin_phone')
+          .single();
+
+        const adminPhone = adminSettings?.setting_value || "96871234567";
+
         await Promise.all([
           sendWhatsAppNotification(
             'student',
@@ -219,7 +228,9 @@ export default function EnrollmentForm() {
           ),
           sendWhatsAppNotification(
             'admin',
-            `📚 طلب تسجيل جديد في أكاديمية همم\n\nاسم الطالب: ${formData.fullName}\nالإيميل: ${formData.email}\nالهاتف: ${formData.phone}\nالصف: ${selectedGrade}\nالمواد المختارة: ${selectedSubjects.join(', ')}\nإجمالي المبلغ: ${calculateTotal()} ريال عماني\n\nيرجى مراجعة الطلب في لوحة التحكم.`
+            `📚 طلب تسجيل جديد في أكاديمية همم\n\nاسم الطالب: ${formData.fullName}\nالإيميل: ${formData.email}\nالهاتف: ${formData.phone}\nالصف: ${selectedGrade}\nالمواد المختارة: ${selectedSubjects.join(', ')}\nإجمالي المبلغ: ${calculateTotal()} ريال عماني\n\nيرجى مراجعة الطلب في لوحة التحكم.`,
+            formData.fullName,
+            adminPhone
           )
         ]);
         console.log('WhatsApp notifications sent successfully');

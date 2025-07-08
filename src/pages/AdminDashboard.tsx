@@ -21,7 +21,8 @@ import {
   ArrowLeft,
   Download,
   MessageSquare,
-  LogOut
+  LogOut,
+  Settings
 } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -55,6 +56,9 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [showPasswordForm, setShowPasswordForm] = useState(true);
+  const [adminPhone, setAdminPhone] = useState("");
+  const [showAdminSettings, setShowAdminSettings] = useState(false);
+  const [tempAdminPhone, setTempAdminPhone] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -67,16 +71,11 @@ export default function AdminDashboard() {
       setIsAuthenticated(true);
       setShowPasswordForm(false);
       fetchEnrollments();
+      fetchAdminSettings();
     } else {
       setLoading(false);
     }
   }, []);
-
-  const checkAuth = async () => {
-    // تم إزالة فحص Authentication مؤقتاً لحل مشكلة 404
-    // يمكن إضافته لاحقاً عند الحاجة
-    console.log('Admin access - authentication check bypassed');
-  };
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,6 +84,7 @@ export default function AdminDashboard() {
       setShowPasswordForm(false);
       localStorage.setItem('admin_authenticated', 'true');
       fetchEnrollments();
+      fetchAdminSettings();
       toast({
         title: "تم تسجيل الدخول بنجاح",
         description: "مرحباً بك في لوحة تحكم الأدمن"
@@ -106,6 +106,54 @@ export default function AdminDashboard() {
       title: "تم تسجيل الخروج",
       description: "شكراً لك"
     });
+  };
+
+  const fetchAdminSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_settings')
+        .select('setting_value')
+        .eq('setting_key', 'admin_phone')
+        .single();
+
+      if (error) {
+        console.error('Error fetching admin settings:', error);
+      } else if (data) {
+        setAdminPhone(data.setting_value);
+        setTempAdminPhone(data.setting_value);
+      }
+    } catch (error) {
+      console.error('Error fetching admin settings:', error);
+    }
+  };
+
+  const updateAdminPhone = async () => {
+    try {
+      const { error } = await supabase
+        .from('admin_settings')
+        .upsert({ 
+          setting_key: 'admin_phone', 
+          setting_value: tempAdminPhone 
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      setAdminPhone(tempAdminPhone);
+      setShowAdminSettings(false);
+      toast({
+        title: "تم التحديث",
+        description: "تم تحديث رقم الأدمن بنجاح"
+      });
+    } catch (error) {
+      console.error('Error updating admin phone:', error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تحديث رقم الأدمن",
+        variant: "destructive"
+      });
+    }
   };
 
   const fetchEnrollments = async () => {
@@ -140,7 +188,7 @@ export default function AdminDashboard() {
           recipient_type: type,
           student_name: studentName,
           phone_number: phoneNumber,
-          admin_phone: "84933313xxx" // رقم الأدمن
+          admin_phone: adminPhone || "96871234567"
         }
       });
     } catch (error) {
@@ -158,7 +206,7 @@ export default function AdminDashboard() {
 
       const updateData: any = {
         status,
-        reviewed_by: 'admin', // مؤقتاً حتى نضيف authentication
+        reviewed_by: 'admin',
         reviewed_at: new Date().toISOString()
       };
 
@@ -167,7 +215,6 @@ export default function AdminDashboard() {
       }
 
       if (status === 'approved') {
-        // يمكنك إضافة منطق لإنشاء بيانات الوصول هنا
         updateData.access_credentials = `تم قبول طلبك! يمكنك الآن الوصول للدروس عبر الرابط...`;
       }
 
@@ -202,7 +249,12 @@ export default function AdminDashboard() {
         description: `تم ${status === 'approved' ? 'قبول' : 'رفض'} الطلب وإرسال إشعار للطالب`
       });
 
-      await fetchEnrollments();
+      // تحديث الحالة في القائمة فوراً
+      setEnrollments(prev => prev.map(e => 
+        e.id === id ? { ...e, status, reviewed_by: 'admin', reviewed_at: new Date().toISOString() } : e
+      ));
+      
+      await fetchEnrollments(); // إعادة تحميل البيانات للتأكد
       setIsDetailModalOpen(false);
       setRejectionReason("");
 
@@ -317,6 +369,14 @@ export default function AdminDashboard() {
           </div>
           <div className="flex gap-2">
             <Button 
+              onClick={() => setShowAdminSettings(true)}
+              variant="outline"
+              className="text-academy-orange border-academy-orange hover:bg-academy-orange hover:text-white"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              إعدادات الأدمن
+            </Button>
+            <Button 
               onClick={handleLogout}
               variant="outline"
               className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
@@ -334,6 +394,21 @@ export default function AdminDashboard() {
             </Button>
           </div>
         </div>
+
+        {/* Admin Settings Card */}
+        {adminPhone && (
+          <Card className="shadow-soft mb-6">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">رقم الأدمن الحالي</p>
+                  <p className="font-medium">{adminPhone}</p>
+                </div>
+                <MessageSquare className="w-5 h-5 text-academy-orange" />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -442,6 +517,38 @@ export default function AdminDashboard() {
             )}
           </CardContent>
         </Card>
+
+        {/* Admin Settings Modal */}
+        <Dialog open={showAdminSettings} onOpenChange={setShowAdminSettings}>
+          <DialogContent className="max-w-md font-arabic" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="text-xl text-accent">إعدادات الأدمن</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">رقم الواتساب للأدمن</label>
+                <Input
+                  type="tel"
+                  value={tempAdminPhone}
+                  onChange={(e) => setTempAdminPhone(e.target.value)}
+                  placeholder="96871234567"
+                  className="mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  سيتم إرسال إشعارات التسجيل الجديدة على هذا الرقم
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={updateAdminPhone} className="flex-1">
+                  حفظ التغييرات
+                </Button>
+                <Button variant="outline" onClick={() => setShowAdminSettings(false)} className="flex-1">
+                  إلغاء
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Enrollment Details Modal */}
         <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
