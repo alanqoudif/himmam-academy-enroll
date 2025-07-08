@@ -131,10 +131,8 @@ export default function AdminDashboard() {
     try {
       const { error } = await supabase
         .from('admin_settings')
-        .upsert({ 
-          setting_key: 'admin_phone', 
-          setting_value: tempAdminPhone 
-        });
+        .update({ setting_value: tempAdminPhone })
+        .eq('setting_key', 'admin_phone');
 
       if (error) {
         throw error;
@@ -260,11 +258,6 @@ export default function AdminDashboard() {
           access_credentials: status === 'approved' ? `تم قبول طلبك! يمكنك الآن الوصول للدروس عبر الرابط...` : null
         } : e
       ));
-      
-      // إعادة تحميل البيانات للتأكد (بعد تأخير قصير)
-      setTimeout(() => {
-        fetchEnrollments();
-      }, 500);
       setIsDetailModalOpen(false);
       setRejectionReason("");
 
