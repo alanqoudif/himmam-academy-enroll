@@ -175,7 +175,9 @@ export default function EnrollmentForm() {
 
     try {
       // رفع إيصال التحويل
+      console.log('Starting file upload...');
       const receiptUrl = await uploadReceipt(receiptFile);
+      console.log('File uploaded successfully:', receiptUrl);
 
       // إنشاء التسجيل
       const enrollmentData = {
@@ -190,27 +192,41 @@ export default function EnrollmentForm() {
         status: 'pending'
       };
 
-      const { error } = await supabase
-        .from('student_enrollments')
-        .insert([enrollmentData]);
+      console.log('Creating enrollment with data:', enrollmentData);
 
-      if (error) {
-        throw error;
+      const { data: enrollmentResult, error: enrollmentError } = await supabase
+        .from('student_enrollments')
+        .insert([enrollmentData])
+        .select()
+        .single();
+
+      if (enrollmentError) {
+        console.error('Database insertion error:', enrollmentError);
+        throw new Error(`خطأ في قاعدة البيانات: ${enrollmentError.message}`);
       }
 
+      console.log('Enrollment created successfully:', enrollmentResult);
+
       // إرسال إشعارات الواتساب
-      await Promise.all([
-        sendWhatsAppNotification(
-          'student',
-          'تم استلام طلب التسجيل الخاص بك في أكاديمية همم التعليمية. سيتم مراجعة طلبك والرد عليك في أقرب وقت ممكن.',
-          formData.fullName,
-          formData.phone
-        ),
-        sendWhatsAppNotification(
-          'admin',
-          `📚 طلب تسجيل جديد في أكاديمية همم\n\nاسم الطالب: ${formData.fullName}\nالإيميل: ${formData.email}\nالهاتف: ${formData.phone}\nالصف: ${selectedGrade}\nالمواد المختارة: ${selectedSubjects.join(', ')}\nإجمالي المبلغ: ${calculateTotal()} ريال عماني\n\nيرجى مراجعة الطلب في لوحة التحكم.`
-        )
-      ]);
+      console.log('Sending WhatsApp notifications...');
+      try {
+        await Promise.all([
+          sendWhatsAppNotification(
+            'student',
+            'تم استلام طلب التسجيل الخاص بك في أكاديمية همم التعليمية. سيتم مراجعة طلبك والرد عليك في أقرب وقت ممكن.',
+            formData.fullName,
+            formData.phone
+          ),
+          sendWhatsAppNotification(
+            'admin',
+            `📚 طلب تسجيل جديد في أكاديمية همم\n\nاسم الطالب: ${formData.fullName}\nالإيميل: ${formData.email}\nالهاتف: ${formData.phone}\nالصف: ${selectedGrade}\nالمواد المختارة: ${selectedSubjects.join(', ')}\nإجمالي المبلغ: ${calculateTotal()} ريال عماني\n\nيرجى مراجعة الطلب في لوحة التحكم.`
+          )
+        ]);
+        console.log('WhatsApp notifications sent successfully');
+      } catch (whatsappError) {
+        console.warn('WhatsApp notifications failed:', whatsappError);
+        // لا نوقف العملية إذا فشل الواتساب
+      }
 
       toast({
         title: "تم الإرسال بنجاح",
@@ -224,10 +240,25 @@ export default function EnrollmentForm() {
       setReceiptFile(null);
 
     } catch (error) {
-      console.error('Error submitting enrollment:', error);
+      console.error('Full error details:', error);
+      
+      let errorMessage = "حدث خطأ أثناء إرسال الطلب";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('قاعدة البيانات')) {
+          errorMessage = error.message;
+        } else if (error.message.includes('storage')) {
+          errorMessage = "خطأ في رفع الملف، تأكد من حجم الملف وصيغته";
+        } else if (error.message.includes('network')) {
+          errorMessage = "خطأ في الاتصال، تأكد من الإنترنت";
+        } else {
+          errorMessage = `خطأ: ${error.message}`;
+        }
+      }
+      
       toast({
         title: "خطأ",
-        description: "حدث خطأ أثناء إرسال الطلب، يرجى المحاولة مرة أخرى",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
