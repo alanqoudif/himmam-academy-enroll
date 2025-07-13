@@ -7,6 +7,7 @@ import { CheckCircle, XCircle, Eye, Clock, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { AuthGuard } from "@/components/AuthGuard";
 
 interface StudentApplication {
   id: string;
@@ -22,7 +23,7 @@ interface StudentApplication {
   created_at: string;
 }
 
-export default function StudentApplications() {
+function StudentApplicationsContent() {
   const [applications, setApplications] = useState<StudentApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState<StudentApplication | null>(null);
@@ -365,5 +366,13 @@ export default function StudentApplications() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function StudentApplications() {
+  return (
+    <AuthGuard allowedRoles={['admin']}>
+      <StudentApplicationsContent />
+    </AuthGuard>
   );
 }

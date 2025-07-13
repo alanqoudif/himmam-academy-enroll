@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Users, Edit, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AuthGuard } from "@/components/AuthGuard";
 
 interface Teacher {
   id: string;
@@ -33,7 +34,7 @@ const availableSubjects = [
   "الحاسوب"
 ];
 
-export default function TeacherManagement() {
+function TeacherManagementContent() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -422,5 +423,13 @@ export default function TeacherManagement() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function TeacherManagement() {
+  return (
+    <AuthGuard allowedRoles={['admin']}>
+      <TeacherManagementContent />
+    </AuthGuard>
   );
 }
