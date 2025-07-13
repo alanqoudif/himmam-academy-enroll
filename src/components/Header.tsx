@@ -35,10 +35,11 @@ const Header = () => {
       <div className="container flex h-16 items-center">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2 space-x-reverse mr-6">
-          <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center">
-            <GraduationCap className="w-6 h-6 text-white" />
-          </div>
-          <span className="font-bold text-xl text-accent">أكاديمية همم</span>
+          <img 
+            src="/lovable-uploads/ad6d0aa7-ee9b-4c8b-8205-791c0b7943c8.png" 
+            alt="أكاديمية همم التعليمية" 
+            className="w-12 h-12"
+          />
         </Link>
 
         {/* Desktop Navigation */}
