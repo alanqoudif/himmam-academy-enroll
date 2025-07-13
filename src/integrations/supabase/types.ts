@@ -484,6 +484,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_user_role_by_id: {
+        Args: { input_user_id: string }
+        Returns: string
+      }
       verify_user_credentials: {
         Args: { input_username: string; input_password: string }
         Returns: {
