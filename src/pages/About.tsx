@@ -1,90 +1,73 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  GraduationCap, 
-  Users, 
-  Award, 
-  Target, 
-  Heart, 
-  BookOpen,
-  Star,
-  TrendingUp,
-  Shield,
-  Clock
-} from "lucide-react";
+import { GraduationCap, Users, Award, Target, Heart, BookOpen, Star, TrendingUp, Shield, Clock } from "lucide-react";
 import Header from "@/components/Header";
 import { useNavigate } from "react-router-dom";
-
 const About = () => {
   const navigate = useNavigate();
-
-  const values = [
-    {
-      icon: Target,
-      title: "الرؤية",
-      description: "أن نكون المنصة التعليمية الرائدة في المنطقة التي تمكن الطلاب من تحقيق أهدافهم الأكاديمية"
-    },
-    {
-      icon: Heart,
-      title: "الرسالة", 
-      description: "تقديم تعليم عالي الجودة يبني قدرات الطلاب ويطور مهاراتهم بأساليب تعليمية حديثة ومبتكرة"
-    },
-    {
-      icon: Award,
-      title: "القيم",
-      description: "الجودة، التميز، الابتكار، والالتزام بتحقيق أفضل النتائج التعليمية لجميع طلابنا"
-    }
-  ];
-
-  const features = [
-    {
-      icon: Users,
-      title: "معلمون خبراء",
-      description: "فريق من أفضل المعلمين المؤهلين والمتخصصين في مجالاتهم",
-      color: "academy-orange"
-    },
-    {
-      icon: BookOpen,
-      title: "مناهج حديثة",
-      description: "مناهج محدثة تواكب أحدث التطورات في التعليم والتكنولوجيا",
-      color: "academy-red"
-    },
-    {
-      icon: Star,
-      title: "نتائج مضمونة",
-      description: "نسبة نجاح عالية تصل إلى 98% في جميع المراحل الدراسية",
-      color: "academy-purple"
-    },
-    {
-      icon: TrendingUp,
-      title: "تطوير مستمر",
-      description: "تحسين مستمر للبرامج والأساليب التعليمية بناءً على أحدث الأبحاث",
-      color: "academy-orange"
-    },
-    {
-      icon: Shield,
-      title: "بيئة آمنة",
-      description: "بيئة تعليمية آمنة ومحفزة تشجع الطلاب على التعلم والإبداع",
-      color: "academy-red"
-    },
-    {
-      icon: Clock,
-      title: "مرونة في التوقيت",
-      description: "جداول مرنة تناسب ظروف الطلاب وأولياء الأمور",
-      color: "academy-purple"
-    }
-  ];
-
-  const stats = [
-    { number: "1200+", label: "طالب متفوق", color: "academy-orange" },
-    { number: "50+", label: "معلم متخصص", color: "academy-red" },
-    { number: "98%", label: "نسبة النجاح", color: "academy-purple" },
-    { number: "5+", label: "سنوات من التميز", color: "academy-orange" }
-  ];
-
-  return (
-    <div className="min-h-screen bg-gradient-accent font-arabic" dir="rtl">
+  const values = [{
+    icon: Target,
+    title: "الرؤية",
+    description: "أن نكون المنصة التعليمية الرائدة في المنطقة التي تمكن الطلاب من تحقيق أهدافهم الأكاديمية"
+  }, {
+    icon: Heart,
+    title: "الرسالة",
+    description: "تقديم تعليم عالي الجودة يبني قدرات الطلاب ويطور مهاراتهم بأساليب تعليمية حديثة ومبتكرة"
+  }, {
+    icon: Award,
+    title: "القيم",
+    description: "الجودة، التميز، الابتكار، والالتزام بتحقيق أفضل النتائج التعليمية لجميع طلابنا"
+  }];
+  const features = [{
+    icon: Users,
+    title: "معلمون خبراء",
+    description: "فريق من أفضل المعلمين المؤهلين والمتخصصين في مجالاتهم",
+    color: "academy-orange"
+  }, {
+    icon: BookOpen,
+    title: "مناهج حديثة",
+    description: "مناهج محدثة تواكب أحدث التطورات في التعليم والتكنولوجيا",
+    color: "academy-red"
+  }, {
+    icon: Star,
+    title: "نتائج مضمونة",
+    description: "نسبة نجاح عالية تصل إلى 98% في جميع المراحل الدراسية",
+    color: "academy-purple"
+  }, {
+    icon: TrendingUp,
+    title: "تطوير مستمر",
+    description: "تحسين مستمر للبرامج والأساليب التعليمية بناءً على أحدث الأبحاث",
+    color: "academy-orange"
+  }, {
+    icon: Shield,
+    title: "بيئة آمنة",
+    description: "بيئة تعليمية آمنة ومحفزة تشجع الطلاب على التعلم والإبداع",
+    color: "academy-red"
+  }, {
+    icon: Clock,
+    title: "مرونة في التوقيت",
+    description: "جداول مرنة تناسب ظروف الطلاب وأولياء الأمور",
+    color: "academy-purple"
+  }];
+  const stats = [{
+    number: "1200+",
+    label: "طالب متفوق",
+    color: "academy-orange"
+  }, {
+    number: "50+",
+    label: "معلم متخصص",
+    color: "academy-red"
+  }, {
+    number: "98%",
+    label: "نسبة النجاح",
+    color: "academy-purple"
+  }, {
+    number: "5+",
+    label: "سنوات من التميز",
+    color: "academy-orange"
+  }];
+  return <div className="min-h-screen bg-gradient-accent font-arabic" dir="rtl">
       <Header />
       
       <div className="container mx-auto px-4 py-16">
@@ -109,22 +92,19 @@ const About = () => {
 
         {/* Stats Section */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
-          {stats.map((stat, index) => (
-            <Card key={index} className="text-center shadow-medium border-0 hover:shadow-strong transition-shadow">
+          {stats.map((stat, index) => <Card key={index} className="text-center shadow-medium border-0 hover:shadow-strong transition-shadow">
               <CardContent className="p-6">
                 <div className={`text-3xl md:text-4xl font-bold text-${stat.color} mb-2`}>
                   {stat.number}
                 </div>
                 <p className="text-muted-foreground text-sm">{stat.label}</p>
               </CardContent>
-            </Card>
-          ))}
+            </Card>)}
         </div>
 
         {/* Vision, Mission, Values */}
         <div className="grid md:grid-cols-3 gap-8 mb-16">
-          {values.map((value, index) => (
-            <Card key={index} className="shadow-medium border-0 hover:shadow-strong transition-shadow">
+          {values.map((value, index) => <Card key={index} className="shadow-medium border-0 hover:shadow-strong transition-shadow">
               <CardHeader className="text-center">
                 <div className="w-16 h-16 bg-academy-orange/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <value.icon className="w-8 h-8 text-academy-orange" />
@@ -134,16 +114,14 @@ const About = () => {
               <CardContent className="text-center">
                 <p className="text-muted-foreground">{value.description}</p>
               </CardContent>
-            </Card>
-          ))}
+            </Card>)}
         </div>
 
         {/* Features Grid */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-accent text-center mb-12">لماذا تختار أكاديمية همم؟</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <Card key={index} className="shadow-medium border-0 hover:shadow-strong transition-all duration-300 hover:scale-105">
+            {features.map((feature, index) => <Card key={index} className="shadow-medium border-0 hover:shadow-strong transition-all duration-300 hover:scale-105">
                 <CardHeader className="text-center">
                   <div className={`w-16 h-16 bg-${feature.color}/10 rounded-full flex items-center justify-center mx-auto mb-4`}>
                     <feature.icon className={`w-8 h-8 text-${feature.color}`} />
@@ -153,8 +131,7 @@ const About = () => {
                 <CardContent className="text-center">
                   <p className="text-muted-foreground text-sm">{feature.description}</p>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
 
@@ -212,21 +189,11 @@ const About = () => {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button 
-                  onClick={() => navigate('/enroll')}
-                  variant="secondary"
-                  size="lg"
-                  className="bg-white text-academy-orange hover:bg-white/90"
-                >
+                <Button onClick={() => navigate('/enroll')} variant="secondary" size="lg" className="bg-white text-academy-orange hover:bg-white/90">
                   <BookOpen className="w-5 h-5 ml-2" />
                   سجل الآن
                 </Button>
-                <Button 
-                  onClick={() => navigate('/contact')}
-                  variant="outline"
-                  size="lg"
-                  className="border-white text-white hover:bg-white hover:text-academy-orange"
-                >
+                <Button onClick={() => navigate('/contact')} variant="outline" size="lg" className="border-white hover:bg-white text-slate-950">
                   <Users className="w-5 h-5 ml-2" />
                   تواصل معنا
                 </Button>
@@ -235,8 +202,6 @@ const About = () => {
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default About;
