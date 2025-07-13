@@ -420,6 +420,15 @@ export default function AdminDashboard() {
             <Users className="h-8 w-8 mb-2" />
             إدارة المعلمين
           </Button>
+          
+          <Button 
+            onClick={() => navigate('/student-applications')} 
+            className="h-24 flex flex-col items-center justify-center"
+            variant="outline"
+          >
+            <FileText className="h-8 w-8 mb-2" />
+            طلبات التسجيل
+          </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="shadow-soft">

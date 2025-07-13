@@ -107,10 +107,18 @@ export default function TeacherManagement() {
         return;
       }
 
+      console.log("بدء إضافة المعلم...", newTeacher);
+
       // إنشاء معرف مستخدم جديد
       const userId = crypto.randomUUID();
+      console.log("معرف المستخدم الجديد:", userId);
+      
+      // إنشاء بيانات اعتماد للمعلم أولاً
+      const credentials = generateCredentials(newTeacher.full_name);
+      console.log("بيانات الاعتماد:", credentials);
       
       // إضافة المعلم إلى جدول profiles
+      console.log("إضافة المعلم إلى جدول profiles...");
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .insert([{
@@ -125,34 +133,51 @@ export default function TeacherManagement() {
         .select()
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("خطأ في إضافة الملف الشخصي:", profileError);
+        throw profileError;
+      }
 
-      // إنشاء بيانات اعتماد للمعلم
-      const credentials = generateCredentials(newTeacher.full_name);
-      
-      // حفظ كلمة المرور مع تشفير أفضل
-      const { error: credError } = await supabase
+      console.log("تم إضافة الملف الشخصي بنجاح:", profileData);
+
+      // حفظ بيانات الاعتماد
+      console.log("حفظ بيانات الاعتماد...");
+      const { data: credData, error: credError } = await supabase
         .from("user_credentials")
         .insert([{
           user_id: userId,
           username: credentials.username,
           password_hash: credentials.password // سيتم تشفيرها في قاعدة البيانات
-        }]);
+        }])
+        .select()
+        .single();
 
       if (credError) {
         console.error("خطأ في إنشاء بيانات الاعتماد:", credError);
+        // لا نوقف العملية، بل نسجل الخطأ فقط
+      } else {
+        console.log("تم حفظ بيانات الاعتماد بنجاح:", credData);
       }
 
       // إرسال إشعار واتساب للمعلم الجديد
+      console.log("إرسال إشعار واتساب...");
       try {
-        await sendWhatsAppNotification(
-          'teacher',
-          `مرحباً ${newTeacher.full_name}! تم إنشاء حساب لك في أكاديمية همم التعليمية.\n\nبيانات الدخول:\nاسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}\n\nيمكنك الآن الدخول للمنصة والبدء في إضافة الدروس.`,
-          newTeacher.full_name,
-          newTeacher.phone
-        );
+        const whatsappResult = await supabase.functions.invoke('send-whatsapp-notification', {
+          body: {
+            message: `🎓 مرحباً ${newTeacher.full_name}!\n\nتم إنشاء حساب لك في أكاديمية همم التعليمية.\n\n🔑 بيانات الدخول:\nاسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}\n\nيمكنك الآن الدخول للمنصة والبدء في إضافة الدروس.\n\nرابط المنصة: ${window.location.origin}`,
+            recipient_type: 'teacher',
+            teacher_name: newTeacher.full_name,
+            phone_number: newTeacher.phone
+          }
+        });
+        
+        if (whatsappResult.error) {
+          console.error('خطأ في إرسال الواتساب:', whatsappResult.error);
+        } else {
+          console.log('تم إرسال الواتساب بنجاح:', whatsappResult.data);
+        }
       } catch (whatsappError) {
-        console.warn('فشل إرسال إشعار الواتساب:', whatsappError);
+        console.error('فشل إرسال إشعار الواتساب:', whatsappError);
       }
 
       // تحديث قائمة المعلمين
@@ -168,16 +193,27 @@ export default function TeacherManagement() {
       setShowAddForm(false);
 
       toast({
-        title: "تم بنجاح",
-        description: `تم إضافة المعلم بنجاح وإرسال بيانات الدخول عبر الواتساب\nاسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}`,
+        title: "✅ تم بنجاح",
+        description: `تم إضافة المعلم بنجاح وإرسال بيانات الدخول عبر الواتساب\n\n📱 اسم المستخدم: ${credentials.username}\n🔐 كلمة المرور: ${credentials.password}`,
+        duration: 10000,
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("خطأ في إضافة المعلم:", error);
+      
+      let errorMessage = "حدث خطأ غير متوقع في إضافة المعلم";
+      
+      if (error?.code === "42501") {
+        errorMessage = "خطأ في الصلاحيات - تأكد من أنك مسجل كمدير";
+      } else if (error?.message) {
+        errorMessage = `خطأ: ${error.message}`;
+      }
+      
       toast({
-        title: "خطأ",
-        description: "حدث خطأ في إضافة المعلم",
+        title: "❌ خطأ في إضافة المعلم",
+        description: errorMessage,
         variant: "destructive",
+        duration: 8000,
       });
     }
   };
