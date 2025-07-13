@@ -62,51 +62,88 @@ export default function TeacherDashboard() {
     try {
       // محاولة الحصول على البيانات من session storage أولاً
       const userSession = localStorage.getItem('user_session');
-      let currentUser = null;
+      console.log('User session from localStorage:', userSession);
       
-      if (userSession) {
-        const sessionData = JSON.parse(userSession);
-        if (sessionData.profile && sessionData.profile.role === 'teacher') {
-          currentUser = sessionData;
-        }
+      if (!userSession) {
+        throw new Error('لا توجد جلسة مستخدم');
       }
       
-      if (!currentUser) {
-        throw new Error('لا توجد بيانات معلم');
+      const sessionData = JSON.parse(userSession);
+      console.log('Session data parsed:', sessionData);
+      
+      if (!sessionData.profile || sessionData.profile.role !== 'teacher') {
+        throw new Error('المستخدم ليس معلماً');
+      }
+      
+      if (!sessionData.user_id) {
+        throw new Error('معرف المستخدم غير موجود');
       }
 
-      // جلب بيانات المعلم من قاعدة البيانات
+      // جلب بيانات المعلم من قاعدة البيانات مباشرة
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("user_id", currentUser.user_id)
+        .eq("user_id", sessionData.user_id)
         .eq("role", "teacher")
         .single();
 
       if (profileError) {
         console.error('خطأ في جلب ملف المعلم:', profileError);
-        throw new Error('فشل في جلب بيانات المعلم');
+        
+        // إذا لم نجد البيانات بـ user_id، جرب البحث بالاسم والهاتف
+        const { data: backupProfileData, error: backupError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("full_name", sessionData.profile.full_name)
+          .eq("phone", sessionData.profile.phone)
+          .eq("role", "teacher")
+          .single();
+          
+        if (backupError || !backupProfileData) {
+          throw new Error('فشل في جلب بيانات المعلم من قاعدة البيانات');
+        }
+        
+        // تحديث session بالمعرف الصحيح
+        sessionData.user_id = backupProfileData.user_id;
+        localStorage.setItem('user_session', JSON.stringify(sessionData));
+        
+        setProfile(backupProfileData);
+        
+        // جلب الدروس
+        const { data: lessonsData } = await supabase
+          .from("lessons")
+          .select("*")
+          .eq("teacher_id", backupProfileData.user_id)
+          .order("created_at", { ascending: false });
+
+        if (lessonsData) {
+          setLessons(lessonsData);
+        }
+        
+        return;
       }
 
       if (profileData) {
+        console.log('Profile data found:', profileData);
         setProfile(profileData);
         
         // جلب الدروس الخاصة بالمعلم
         const { data: lessonsData } = await supabase
           .from("lessons")
           .select("*")
-          .eq("teacher_id", currentUser.user_id)
+          .eq("teacher_id", sessionData.user_id)
           .order("created_at", { ascending: false });
 
         if (lessonsData) {
+          console.log('Lessons found:', lessonsData.length);
           setLessons(lessonsData);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("خطأ في جلب البيانات:", error);
       toast({
         title: "خطأ",
-        description: "حدث خطأ في جلب البيانات",
+        description: error.message || "حدث خطأ في جلب البيانات",
         variant: "destructive",
       });
     } finally {
@@ -203,7 +240,24 @@ export default function TeacherDashboard() {
   }
 
   if (!profile) {
-    return <div className="p-6">لم يتم العثور على بيانات المعلم</div>;
+    return (
+      <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="text-center py-12">
+            <h3 className="text-lg font-medium mb-2">لم يتم العثور على بيانات المعلم</h3>
+            <p className="text-muted-foreground mb-4">
+              يرجى التواصل مع الإدارة للتأكد من صحة بياناتك
+            </p>
+            <Button onClick={() => {
+              localStorage.removeItem('user_session');
+              window.location.href = '/login';
+            }}>
+              العودة لتسجيل الدخول
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
