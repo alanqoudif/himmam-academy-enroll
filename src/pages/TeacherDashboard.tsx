@@ -161,34 +161,6 @@ export default function TeacherDashboard() {
       if (!profile?.user_id) {
         throw new Error('لا توجد بيانات مستخدم صحيحة');
       }
-
-      // إنشاء session token مؤقت للمصادقة
-      const userSession = localStorage.getItem('user_session');
-      if (!userSession) {
-        throw new Error('جلسة المستخدم غير موجودة');
-      }
-
-      const sessionData = JSON.parse(userSession);
-      
-      // إنشاء supabase client مع session token
-      const { createClient } = await import('@supabase/supabase-js');
-      const tempClient = createClient(
-        'https://othnpzfrtsesvwfwjfpr.supabase.co',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90aG5wemZydHNlc3Z3ZndqZnByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MjU1MDcsImV4cCI6MjA2NzUwMTUwN30.quhOcQUmerWlmg-dXqIF9TCi3P_XP0DNSDyCo6b-ejc',
-        {
-          auth: {
-            persistSession: false
-          }
-        }
-      );
-
-      // تسجيل دخول مؤقت باستخدام بيانات المستخدم
-      const { data: authData, error: authError } = await tempClient.auth.signInAnonymously();
-      
-      if (authError) {
-        console.error('خطأ في المصادقة:', authError);
-        // المتابعة بدون مصادقة مؤقتة - استخدام العميل الأساسي
-      }
       
       const fileExt = file.name.split('.').pop();
       const fileName = `${profile.user_id}_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -197,36 +169,17 @@ export default function TeacherDashboard() {
       console.log('مسار الملف:', filePath);
       console.log('بيانات المستخدم:', profile.user_id);
 
-      let { data: uploadData, error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('lesson-materials')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
+          contentType: file.type
         });
 
       if (uploadError) {
         console.error('خطأ في رفع الملف:', uploadError);
-        
-        // إذا كان الخطأ متعلق بالصلاحيات، جرب مرة أخرى مع معاملات مختلفة
-        if (uploadError.message?.includes('row-level security') || uploadError.message?.includes('Unauthorized')) {
-          console.log('محاولة رفع الملف مرة أخرى مع معاملات مختلفة...');
-          
-          const { data: retryData, error: retryError } = await supabase.storage
-            .from('lesson-materials')
-            .upload(filePath, file, {
-              cacheControl: '3600',
-              upsert: true,
-              contentType: file.type
-            });
-            
-          if (retryError) {
-            throw retryError;
-          }
-          
-          uploadData = retryData;
-        } else {
-          throw uploadError;
-        }
+        throw uploadError;
       }
 
       console.log('تم رفع الملف بنجاح:', uploadData);
