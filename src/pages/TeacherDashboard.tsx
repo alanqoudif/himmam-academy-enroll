@@ -154,26 +154,45 @@ export default function TeacherDashboard() {
 
   const handleFileUpload = async (file: File, type: 'video' | 'pdf') => {
     try {
+      console.log(`بدء رفع ملف ${type}:`, file.name, file.size);
+      
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `${type}s/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
+      console.log('مسار الملف:', filePath);
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('lesson-materials')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('خطأ في رفع الملف:', uploadError);
+        throw uploadError;
+      }
 
-      const { data: { publicUrl } } = supabase.storage
+      console.log('تم رفع الملف بنجاح:', uploadData);
+
+      const { data: urlData } = supabase.storage
         .from('lesson-materials')
         .getPublicUrl(filePath);
 
-      return publicUrl;
-    } catch (error) {
+      console.log('رابط الملف:', urlData.publicUrl);
+      
+      toast({
+        title: "تم بنجاح",
+        description: `تم رفع ملف ${type === 'video' ? 'الفيديو' : 'PDF'} بنجاح`,
+      });
+
+      return urlData.publicUrl;
+    } catch (error: any) {
       console.error('خطأ في رفع الملف:', error);
       toast({
-        title: "خطأ",
-        description: "حدث خطأ في رفع الملف",
+        title: "خطأ في رفع الملف",
+        description: error.message || `حدث خطأ في رفع ملف ${type === 'video' ? 'الفيديو' : 'PDF'}`,
         variant: "destructive",
       });
       return null;
@@ -213,7 +232,9 @@ export default function TeacherDashboard() {
       }
 
       // التحقق من وجود محتوى واحد على الأقل
-      if (!newLesson.video_url && !newLesson.pdf_url && !newLesson.youtube_url) {
+      const hasContent = newLesson.video_url.trim() || newLesson.pdf_url.trim() || newLesson.youtube_url.trim();
+      
+      if (!hasContent) {
         toast({
           title: "خطأ",
           description: "يرجى إضافة محتوى واحد على الأقل (فيديو، PDF، أو رابط يوتيوب)",
@@ -423,11 +444,12 @@ export default function TeacherDashboard() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Array.from({ length: 8 }, (_, i) => i + 5).map((grade) => (
-                        <SelectItem key={grade} value={grade.toString()}>
-                          الصف {grade}
+                      {/* عرض الصفوف التي يدرسها المعلم فقط */}
+                      {profile.grade && (
+                        <SelectItem value={profile.grade.toString()}>
+                          الصف {profile.grade}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -445,93 +467,125 @@ export default function TeacherDashboard() {
 
               <div>
                 <Label>أنواع المحتوى المتاحة</Label>
-                <p className="text-sm text-muted-foreground mb-3">يمكنك إضافة أكثر من نوع محتوى في نفس الدرس</p>
-              </div>
+                <p className="text-sm text-muted-foreground mb-4">يمكنك إضافة أكثر من نوع محتوى في نفس الدرس</p>
+                
+                <div className="space-y-4 border rounded-lg p-4">
+                  {/* رابط يوتيوب */}
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <input
+                        type="checkbox"
+                        id="youtube_check"
+                        checked={!!newLesson.youtube_url}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNewLesson({ ...newLesson, youtube_url: "https://www.youtube.com/watch?v=" });
+                          } else {
+                            setNewLesson({ ...newLesson, youtube_url: "" });
+                          }
+                        }}
+                        className="w-4 h-4"
+                      />
+                      <Label htmlFor="youtube_check" className="font-medium">رابط يوتيوب</Label>
+                    </div>
+                    {!!newLesson.youtube_url && (
+                      <Input
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        value={newLesson.youtube_url}
+                        onChange={(e) => setNewLesson({ ...newLesson, youtube_url: e.target.value })}
+                      />
+                    )}
+                  </div>
 
-              {/* رابط يوتيوب */}
-              <div>
-                <div className="flex items-center space-x-2 space-x-reverse mb-2">
-                  <input
-                    type="checkbox"
-                    id="youtube_check"
-                    checked={!!newLesson.youtube_url}
-                    onChange={(e) => {
-                      if (!e.target.checked) {
-                        setNewLesson({ ...newLesson, youtube_url: "" });
-                      }
-                    }}
-                  />
-                  <Label htmlFor="youtube_check">رابط يوتيوب</Label>
-                </div>
-                <Input
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  value={newLesson.youtube_url}
-                  onChange={(e) => setNewLesson({ ...newLesson, youtube_url: e.target.value })}
-                  disabled={!newLesson.youtube_url && newLesson.youtube_url === ""}
-                />
-              </div>
+                  {/* رفع فيديو */}
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <input
+                        type="checkbox"
+                        id="video_check"
+                        checked={!!newLesson.video_url && !newLesson.youtube_url}
+                        onChange={(e) => {
+                          if (e.target.checked && !newLesson.youtube_url) {
+                            // تفعيل حقل رفع الفيديو
+                            document.getElementById('video_file_input')?.click();
+                          } else {
+                            setNewLesson({ ...newLesson, video_url: "" });
+                          }
+                        }}
+                        className="w-4 h-4"
+                        disabled={!!newLesson.youtube_url}
+                      />
+                      <Label htmlFor="video_check" className="font-medium">رفع ملف فيديو</Label>
+                      {!!newLesson.youtube_url && (
+                        <span className="text-sm text-muted-foreground">(معطل - يوجد رابط يوتيوب)</span>
+                      )}
+                    </div>
+                    
+                    <Input
+                      id="video_file_input"
+                      type="file"
+                      accept="video/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          console.log('ملف فيديو محدد:', file.name);
+                          const url = await handleFileUpload(file, 'video');
+                          if (url) {
+                            setNewLesson({ ...newLesson, video_url: url });
+                            console.log('تم حفظ رابط الفيديو:', url);
+                          }
+                        }
+                      }}
+                      className={!newLesson.youtube_url ? "" : "hidden"}
+                    />
+                    
+                    {!!newLesson.video_url && !newLesson.youtube_url && (
+                      <p className="text-sm text-green-600 mt-1">✓ تم رفع الفيديو بنجاح</p>
+                    )}
+                  </div>
 
-              {/* رفع فيديو */}
-              <div>
-                <div className="flex items-center space-x-2 space-x-reverse mb-2">
-                  <input
-                    type="checkbox"
-                    id="video_check"
-                    checked={!!newLesson.video_url && !newLesson.youtube_url}
-                    onChange={(e) => {
-                      if (!e.target.checked) {
-                        setNewLesson({ ...newLesson, video_url: "" });
-                      }
-                    }}
-                  />
-                  <Label htmlFor="video_check">رفع ملف فيديو</Label>
+                  {/* رفع PDF */}
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <input
+                        type="checkbox"
+                        id="pdf_check"
+                        checked={!!newLesson.pdf_url}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            // تفعيل حقل رفع الـ PDF
+                            document.getElementById('pdf_file_input')?.click();
+                          } else {
+                            setNewLesson({ ...newLesson, pdf_url: "" });
+                          }
+                        }}
+                        className="w-4 h-4"
+                      />
+                      <Label htmlFor="pdf_check" className="font-medium">رفع ملف PDF</Label>
+                    </div>
+                    
+                    <Input
+                      id="pdf_file_input"
+                      type="file"
+                      accept=".pdf"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          console.log('ملف PDF محدد:', file.name);
+                          const url = await handleFileUpload(file, 'pdf');
+                          if (url) {
+                            setNewLesson({ ...newLesson, pdf_url: url });
+                            console.log('تم حفظ رابط PDF:', url);
+                          }
+                        }
+                      }}
+                    />
+                    
+                    {!!newLesson.pdf_url && (
+                      <p className="text-sm text-green-600 mt-1">✓ تم رفع ملف PDF بنجاح</p>
+                    )}
+                  </div>
                 </div>
-                <Input
-                  type="file"
-                  accept="video/*"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const url = await handleFileUpload(file, 'video');
-                      if (url) setNewLesson({ ...newLesson, video_url: url });
-                    }
-                  }}
-                  disabled={!!newLesson.youtube_url}
-                />
-                {newLesson.video_url && !newLesson.youtube_url && (
-                  <p className="text-sm text-green-600 mt-1">تم رفع الفيديو بنجاح</p>
-                )}
-              </div>
-
-              {/* رفع PDF */}
-              <div>
-                <div className="flex items-center space-x-2 space-x-reverse mb-2">
-                  <input
-                    type="checkbox"
-                    id="pdf_check"
-                    checked={!!newLesson.pdf_url}
-                    onChange={(e) => {
-                      if (!e.target.checked) {
-                        setNewLesson({ ...newLesson, pdf_url: "" });
-                      }
-                    }}
-                  />
-                  <Label htmlFor="pdf_check">رفع ملف PDF</Label>
-                </div>
-                <Input
-                  type="file"
-                  accept=".pdf"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const url = await handleFileUpload(file, 'pdf');
-                      if (url) setNewLesson({ ...newLesson, pdf_url: url });
-                    }
-                  }}
-                />
-                {newLesson.pdf_url && (
-                  <p className="text-sm text-green-600 mt-1">تم رفع ملف PDF بنجاح</p>
-                )}
               </div>
 
               <div className="flex gap-2">
