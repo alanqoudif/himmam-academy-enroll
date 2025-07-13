@@ -109,6 +109,18 @@ export default function TeacherManagement() {
 
       console.log("بدء إضافة المعلم...", newTeacher);
 
+      // التحقق من وجود المستخدم الحالي كمدير
+      const currentUser = JSON.parse(localStorage.getItem('user_session') || '{}');
+      
+      if (!currentUser.profile || currentUser.profile.role !== 'admin') {
+        toast({
+          title: "خطأ في الصلاحيات",
+          description: "تحتاج لصلاحيات المدير لإضافة معلمين",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // إنشاء معرف مستخدم جديد
       const userId = crypto.randomUUID();
       console.log("معرف المستخدم الجديد:", userId);

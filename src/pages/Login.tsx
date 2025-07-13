@@ -84,6 +84,67 @@ export default function Login() {
     }
   };
 
+  // دالة إنشاء حساب المدير الأول
+  const createFirstAdmin = async () => {
+    try {
+      console.log("إنشاء حساب المدير الأول...");
+      
+      const adminUserId = crypto.randomUUID();
+      
+      // إنشاء ملف شخصي للمدير
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .insert([{
+          user_id: adminUserId,
+          full_name: "مدير النظام",
+          phone: "96871234567",
+          role: "admin",
+          status: "approved",
+          grade: null,
+          subjects: []
+        }])
+        .select()
+        .single();
+
+      if (profileError) {
+        console.error("خطأ في إنشاء الملف الشخصي:", profileError);
+        throw profileError;
+      }
+
+      // إنشاء بيانات اعتماد للمدير
+      const { error: credError } = await supabase
+        .from("user_credentials")
+        .insert([{
+          user_id: adminUserId,
+          username: "admin",
+          password_hash: "Admin123!" // سيتم تشفيرها في قاعدة البيانات
+        }]);
+
+      if (credError) {
+        console.error("خطأ في إنشاء بيانات الاعتماد:", credError);
+        throw credError;
+      }
+
+      toast({
+        title: "✅ تم إنشاء حساب المدير",
+        description: "يمكنك الآن تسجيل الدخول\nاسم المستخدم: admin\nكلمة المرور: Admin123!",
+        duration: 10000,
+      });
+
+      // ملء بيانات النموذج تلقائياً
+      setUsername("admin");
+      setPassword("Admin123!");
+
+    } catch (error: any) {
+      console.error("خطأ في إنشاء حساب المدير:", error);
+      toast({
+        title: "❌ خطأ في إنشاء حساب المدير",
+        description: error.message || "حدث خطأ غير متوقع",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -141,6 +202,22 @@ export default function Login() {
             </Button>
           </form>
 
+          {/* زر إنشاء حساب المدير الأول */}
+          <div className="mt-6 pt-6 border-t border-border">
+            <div className="text-center space-y-3">
+              <p className="text-sm text-muted-foreground">
+                إذا كنت مدير النظام ولا تملك حساب، يمكنك إنشاء حساب المدير الأول
+              </p>
+              <Button 
+                type="button"
+                variant="outline" 
+                onClick={createFirstAdmin}
+                className="w-full"
+              >
+                إنشاء حساب المدير الأول
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
