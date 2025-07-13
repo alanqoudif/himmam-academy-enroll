@@ -31,9 +31,13 @@ serve(async (req) => {
 
     if (recipient_type === 'student') {
       target_phone = phone_number || '';
+      // إزالة علامة + من الرقم إن وجدت
+      target_phone = target_phone.replace(/^\+/, '');
       full_message = `مرحباً ${student_name || ''}،\n\n${message}`;
     } else if (recipient_type === 'admin') {
       target_phone = admin_phone_number;
+      // إزالة علامة + من الرقم إن وجدت
+      target_phone = target_phone.replace(/^\+/, '');
       full_message = message;
     }
 
