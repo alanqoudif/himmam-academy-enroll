@@ -60,16 +60,33 @@ export default function TeacherDashboard() {
 
   const fetchTeacherData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      // محاولة الحصول على البيانات من session storage أولاً
+      const userSession = localStorage.getItem('user_session');
+      let currentUser = null;
+      
+      if (userSession) {
+        const sessionData = JSON.parse(userSession);
+        if (sessionData.profile && sessionData.profile.role === 'teacher') {
+          currentUser = sessionData;
+        }
+      }
+      
+      if (!currentUser) {
+        throw new Error('لا توجد بيانات معلم');
+      }
 
-      // جلب بيانات المعلم
-      const { data: profileData } = await supabase
+      // جلب بيانات المعلم من قاعدة البيانات
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", currentUser.user_id)
         .eq("role", "teacher")
         .single();
+
+      if (profileError) {
+        console.error('خطأ في جلب ملف المعلم:', profileError);
+        throw new Error('فشل في جلب بيانات المعلم');
+      }
 
       if (profileData) {
         setProfile(profileData);
@@ -78,7 +95,7 @@ export default function TeacherDashboard() {
         const { data: lessonsData } = await supabase
           .from("lessons")
           .select("*")
-          .eq("teacher_id", user.id)
+          .eq("teacher_id", currentUser.user_id)
           .order("created_at", { ascending: false });
 
         if (lessonsData) {
@@ -127,15 +144,18 @@ export default function TeacherDashboard() {
 
   const addLesson = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !profile) return;
+      const userSession = localStorage.getItem('user_session');
+      if (!userSession || !profile) return;
+      
+      const sessionData = JSON.parse(userSession);
+      if (!sessionData.user_id) return;
 
       const lessonData = {
         title: newLesson.title,
         description: newLesson.description,
         subject: newLesson.subject,
         grade: newLesson.grade,
-        teacher_id: user.id,
+        teacher_id: sessionData.user_id,
         content_type: newLesson.content_type,
         duration_minutes: newLesson.duration_minutes,
         video_url: newLesson.video_url,
