@@ -47,6 +47,7 @@ interface Enrollment {
 }
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -60,7 +61,6 @@ export default function AdminDashboard() {
   const [showAdminSettings, setShowAdminSettings] = useState(false);
   const [tempAdminPhone, setTempAdminPhone] = useState("");
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const ADMIN_PASSWORD = "admin2025";
 
@@ -411,7 +411,16 @@ export default function AdminDashboard() {
           </Card>
         )}
 
-        {/* Statistics Cards */}
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Button 
+            onClick={() => navigate('/teacher-management')} 
+            className="h-24 flex flex-col items-center justify-center"
+          >
+            <Users className="h-8 w-8 mb-2" />
+            إدارة المعلمين
+          </Button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="shadow-soft">
             <CardContent className="p-6">

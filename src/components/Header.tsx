@@ -131,19 +131,19 @@ const Header = () => {
         {/* CTA Button */}
         <div className="flex items-center space-x-2 space-x-reverse mr-auto">
           <Button 
+            onClick={() => navigate('/login')}
+            variant="outline"
+            className="hidden sm:flex"
+          >
+            تسجيل الدخول
+          </Button>
+          
+          <Button 
             onClick={() => navigate('/enroll')}
             className="bg-gradient-primary hover:opacity-90 text-white font-medium hidden sm:flex"
           >
             <BookOpen className="w-4 h-4 ml-2" />
             سجل الآن
-          </Button>
-          
-          <Button 
-            onClick={() => navigate('/admin')}
-            variant="outline"
-            className="hidden sm:flex"
-          >
-            لوحة التحكم
           </Button>
 
           {/* Mobile Menu Button */}

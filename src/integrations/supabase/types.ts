@@ -120,45 +120,54 @@ export type Database = {
       }
       lessons: {
         Row: {
+          content_type: string | null
           created_at: string
           description: string | null
           duration_minutes: number | null
+          file_size_mb: number | null
           grade: number
           id: string
           is_active: boolean | null
           pdf_url: string | null
           subject: string
           teacher_id: string
+          thumbnail_url: string | null
           title: string
           updated_at: string
           video_url: string | null
           views_count: number | null
         }
         Insert: {
+          content_type?: string | null
           created_at?: string
           description?: string | null
           duration_minutes?: number | null
+          file_size_mb?: number | null
           grade: number
           id?: string
           is_active?: boolean | null
           pdf_url?: string | null
           subject: string
           teacher_id: string
+          thumbnail_url?: string | null
           title: string
           updated_at?: string
           video_url?: string | null
           views_count?: number | null
         }
         Update: {
+          content_type?: string | null
           created_at?: string
           description?: string | null
           duration_minutes?: number | null
+          file_size_mb?: number | null
           grade?: number
           id?: string
           is_active?: boolean | null
           pdf_url?: string | null
           subject?: string
           teacher_id?: string
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string
           video_url?: string | null
@@ -435,12 +444,49 @@ export type Database = {
         }
         Relationships: []
       }
+      user_credentials: {
+        Row: {
+          created_at: string
+          id: string
+          password_hash: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          password_hash: string
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          password_hash?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_username: {
+        Args: { role_type: string; full_name: string }
+        Returns: string
+      }
+      verify_user_credentials: {
+        Args: { input_username: string; input_password: string }
+        Returns: {
+          user_id: string
+          profile_data: Json
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
