@@ -47,10 +47,11 @@ export default function TeacherDashboard() {
     title: "",
     description: "",
     subject: "",
-    grade: 1,
-    content_type: "video",
+    grade: 5,
+    content_types: [] as string[], // تغيير لدعم أنواع متعددة
     video_url: "",
     pdf_url: "",
+    youtube_url: "",
     duration_minutes: 30,
   });
 
@@ -182,23 +183,79 @@ export default function TeacherDashboard() {
   const addLesson = async () => {
     try {
       const userSession = localStorage.getItem('user_session');
-      if (!userSession || !profile) return;
+      if (!userSession || !profile) {
+        toast({
+          title: "خطأ",
+          description: "لا توجد بيانات مستخدم صحيحة",
+          variant: "destructive",
+        });
+        return;
+      }
       
       const sessionData = JSON.parse(userSession);
-      if (!sessionData.user_id) return;
+      if (!sessionData.user_id) {
+        toast({
+          title: "خطأ", 
+          description: "معرف المستخدم غير موجود",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      const lessonData = {
+      // التحقق من الحقول المطلوبة
+      if (!newLesson.title.trim() || !newLesson.subject || !newLesson.description.trim()) {
+        toast({
+          title: "خطأ",
+          description: "يرجى ملء جميع الحقول المطلوبة (العنوان، المادة، الوصف)",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // التحقق من وجود محتوى واحد على الأقل
+      if (!newLesson.video_url && !newLesson.pdf_url && !newLesson.youtube_url) {
+        toast({
+          title: "خطأ",
+          description: "يرجى إضافة محتوى واحد على الأقل (فيديو، PDF، أو رابط يوتيوب)",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // تحديد أنواع المحتوى المتاحة
+      const contentTypes = [];
+      if (newLesson.video_url) contentTypes.push('video');
+      if (newLesson.pdf_url) contentTypes.push('pdf'); 
+      if (newLesson.youtube_url) contentTypes.push('youtube_link');
+
+      console.log('إضافة درس جديد:', {
         title: newLesson.title,
-        description: newLesson.description,
         subject: newLesson.subject,
         grade: newLesson.grade,
         teacher_id: sessionData.user_id,
-        content_type: newLesson.content_type,
+        contentTypes: contentTypes
+      });
+
+      const lessonData = {
+        title: newLesson.title.trim(),
+        description: newLesson.description.trim(),
+        subject: newLesson.subject,
+        grade: newLesson.grade,
+        teacher_id: sessionData.user_id,
+        content_type: contentTypes.join(','), // حفظ الأنواع كنص مفصول بفواصل
         duration_minutes: newLesson.duration_minutes,
-        video_url: newLesson.video_url,
-        pdf_url: newLesson.pdf_url,
+        video_url: newLesson.video_url || null,
+        pdf_url: newLesson.pdf_url || null,
+        thumbnail_url: null,
         is_active: true,
+        views_count: 0,
+        file_size_mb: 0
       };
+
+      // حفظ رابط اليوتيوب في video_url إذا لم يكن هناك فيديو مرفوع
+      if (newLesson.youtube_url && !newLesson.video_url) {
+        lessonData.video_url = newLesson.youtube_url;
+      }
 
       const { data, error } = await supabase
         .from("lessons")
@@ -206,17 +263,23 @@ export default function TeacherDashboard() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("خطأ في قاعدة البيانات:", error);
+        throw error;
+      }
 
+      console.log("تم إنشاء الدرس بنجاح:", data);
+      
       setLessons([data, ...lessons]);
       setNewLesson({
         title: "",
         description: "",
         subject: "",
-        grade: 1,
-        content_type: "video",
+        grade: 5,
+        content_types: [],
         video_url: "",
         pdf_url: "",
+        youtube_url: "",
         duration_minutes: 30,
       });
       setShowAddLesson(false);
@@ -225,11 +288,20 @@ export default function TeacherDashboard() {
         title: "تم بنجاح",
         description: "تم إضافة الدرس بنجاح",
       });
-    } catch (error) {
+      
+    } catch (error: any) {
       console.error("خطأ في إضافة الدرس:", error);
+      
+      let errorMessage = "حدث خطأ في إضافة الدرس";
+      if (error?.message) {
+        errorMessage = `خطأ: ${error.message}`;
+      } else if (error?.details) {
+        errorMessage = `تفاصيل الخطأ: ${error.details}`;
+      }
+      
       toast({
-        title: "خطأ",
-        description: "حدث خطأ في إضافة الدرس",
+        title: "خطأ في إضافة الدرس",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -346,14 +418,18 @@ export default function TeacherDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="grade">الصف</Label>
-                  <Input
-                    id="grade"
-                    type="number"
-                    value={newLesson.grade}
-                    onChange={(e) => setNewLesson({ ...newLesson, grade: parseInt(e.target.value) })}
-                    min="1"
-                    max="12"
-                  />
+                  <Select value={newLesson.grade.toString()} onValueChange={(value) => setNewLesson({ ...newLesson, grade: parseInt(value) })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 8 }, (_, i) => i + 5).map((grade) => (
+                        <SelectItem key={grade} value={grade.toString()}>
+                          الصف {grade}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="duration">مدة الدرس (دقائق)</Label>
@@ -361,73 +437,102 @@ export default function TeacherDashboard() {
                     id="duration"
                     type="number"
                     value={newLesson.duration_minutes}
-                    onChange={(e) => setNewLesson({ ...newLesson, duration_minutes: parseInt(e.target.value) })}
+                    onChange={(e) => setNewLesson({ ...newLesson, duration_minutes: parseInt(e.target.value) || 30 })}
                     min="1"
                   />
                 </div>
               </div>
 
               <div>
-                <Label>نوع المحتوى</Label>
-                <Select value={newLesson.content_type} onValueChange={(value: any) => setNewLesson({ ...newLesson, content_type: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="video">رفع فيديو</SelectItem>
-                    <SelectItem value="youtube_link">رابط يوتيوب</SelectItem>
-                    <SelectItem value="pdf">ملف PDF</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>أنواع المحتوى المتاحة</Label>
+                <p className="text-sm text-muted-foreground mb-3">يمكنك إضافة أكثر من نوع محتوى في نفس الدرس</p>
               </div>
 
-              {newLesson.content_type === 'youtube_link' && (
-                <div>
-                  <Label htmlFor="youtube_url">رابط اليوتيوب</Label>
-                  <Input
-                    id="youtube_url"
-                    value={newLesson.video_url}
-                    onChange={(e) => setNewLesson({ ...newLesson, video_url: e.target.value })}
-                    placeholder="https://www.youtube.com/watch?v=..."
-                  />
-                </div>
-              )}
-
-              {newLesson.content_type === 'video' && (
-                <div>
-                  <Label htmlFor="video_file">رفع فيديو</Label>
-                  <Input
-                    id="video_file"
-                    type="file"
-                    accept="video/*"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const url = await handleFileUpload(file, 'video');
-                        if (url) setNewLesson({ ...newLesson, video_url: url });
+              {/* رابط يوتيوب */}
+              <div>
+                <div className="flex items-center space-x-2 space-x-reverse mb-2">
+                  <input
+                    type="checkbox"
+                    id="youtube_check"
+                    checked={!!newLesson.youtube_url}
+                    onChange={(e) => {
+                      if (!e.target.checked) {
+                        setNewLesson({ ...newLesson, youtube_url: "" });
                       }
                     }}
                   />
+                  <Label htmlFor="youtube_check">رابط يوتيوب</Label>
                 </div>
-              )}
+                <Input
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  value={newLesson.youtube_url}
+                  onChange={(e) => setNewLesson({ ...newLesson, youtube_url: e.target.value })}
+                  disabled={!newLesson.youtube_url && newLesson.youtube_url === ""}
+                />
+              </div>
 
-              {newLesson.content_type === 'pdf' && (
-                <div>
-                  <Label htmlFor="pdf_file">رفع ملف PDF</Label>
-                  <Input
-                    id="pdf_file"
-                    type="file"
-                    accept=".pdf"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const url = await handleFileUpload(file, 'pdf');
-                        if (url) setNewLesson({ ...newLesson, pdf_url: url });
+              {/* رفع فيديو */}
+              <div>
+                <div className="flex items-center space-x-2 space-x-reverse mb-2">
+                  <input
+                    type="checkbox"
+                    id="video_check"
+                    checked={!!newLesson.video_url && !newLesson.youtube_url}
+                    onChange={(e) => {
+                      if (!e.target.checked) {
+                        setNewLesson({ ...newLesson, video_url: "" });
                       }
                     }}
                   />
+                  <Label htmlFor="video_check">رفع ملف فيديو</Label>
                 </div>
-              )}
+                <Input
+                  type="file"
+                  accept="video/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const url = await handleFileUpload(file, 'video');
+                      if (url) setNewLesson({ ...newLesson, video_url: url });
+                    }
+                  }}
+                  disabled={!!newLesson.youtube_url}
+                />
+                {newLesson.video_url && !newLesson.youtube_url && (
+                  <p className="text-sm text-green-600 mt-1">تم رفع الفيديو بنجاح</p>
+                )}
+              </div>
+
+              {/* رفع PDF */}
+              <div>
+                <div className="flex items-center space-x-2 space-x-reverse mb-2">
+                  <input
+                    type="checkbox"
+                    id="pdf_check"
+                    checked={!!newLesson.pdf_url}
+                    onChange={(e) => {
+                      if (!e.target.checked) {
+                        setNewLesson({ ...newLesson, pdf_url: "" });
+                      }
+                    }}
+                  />
+                  <Label htmlFor="pdf_check">رفع ملف PDF</Label>
+                </div>
+                <Input
+                  type="file"
+                  accept=".pdf"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const url = await handleFileUpload(file, 'pdf');
+                      if (url) setNewLesson({ ...newLesson, pdf_url: url });
+                    }
+                  }}
+                />
+                {newLesson.pdf_url && (
+                  <p className="text-sm text-green-600 mt-1">تم رفع ملف PDF بنجاح</p>
+                )}
+              </div>
 
               <div className="flex gap-2">
                 <Button onClick={addLesson}>إضافة الدرس</Button>
