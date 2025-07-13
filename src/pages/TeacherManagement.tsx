@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Users, Edit, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AuthGuard } from "@/components/AuthGuard";
+import { TeacherEditDialog } from "@/components/TeacherEditDialog";
 
 interface Teacher {
   id: string;
@@ -19,6 +20,7 @@ interface Teacher {
   subjects: string[];
   status: string;
   created_at: string;
+  updated_at: string;
 }
 
 const availableSubjects = [
@@ -38,6 +40,7 @@ function TeacherManagementContent() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const { toast } = useToast();
 
   const [newTeacher, setNewTeacher] = useState({
@@ -179,7 +182,7 @@ function TeacherManagementContent() {
           body: {
             message: `🎓 مرحباً ${newTeacher.full_name}!\n\nتم إنشاء حساب لك في أكاديمية همم التعليمية.\n\n🔑 بيانات الدخول:\nاسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}\n\nيمكنك الآن الدخول للمنصة والبدء في إضافة الدروس.\n\nرابط المنصة: ${window.location.origin}`,
             recipient_type: 'teacher',
-            teacher_name: newTeacher.full_name,
+            student_name: newTeacher.full_name,
             phone_number: newTeacher.phone
           }
         });
@@ -394,7 +397,11 @@ function TeacherManagementContent() {
                 </div>
                 
                 <div className="flex gap-2 mt-4">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setEditingTeacher(teacher)}
+                  >
                     <Edit className="h-4 w-4 mr-1" />
                     تعديل
                   </Button>
@@ -421,6 +428,17 @@ function TeacherManagementContent() {
             </CardContent>
           </Card>
         )}
+
+        {/* نافذة تعديل المعلم */}
+        <TeacherEditDialog
+          teacher={editingTeacher}
+          isOpen={!!editingTeacher}
+          onClose={() => setEditingTeacher(null)}
+          onUpdate={(updatedTeacher) => {
+            setTeachers(teachers.map(t => t.id === updatedTeacher.id ? updatedTeacher : t));
+            setEditingTeacher(null);
+          }}
+        />
       </div>
     </div>
   );

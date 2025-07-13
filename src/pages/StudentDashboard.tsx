@@ -40,16 +40,33 @@ export default function StudentDashboard() {
 
   const fetchStudentData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      // محاولة الحصول على البيانات من session storage أولاً
+      const userSession = localStorage.getItem('user_session');
+      let currentUser = null;
+      
+      if (userSession) {
+        const sessionData = JSON.parse(userSession);
+        if (sessionData.profile && sessionData.profile.role === 'student') {
+          currentUser = sessionData;
+        }
+      }
+      
+      if (!currentUser) {
+        throw new Error('لا توجد بيانات طالب');
+      }
 
-      // جلب بيانات الطالب
-      const { data: profileData } = await supabase
+      // جلب بيانات الطالب من قاعدة البيانات
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", currentUser.user_id)
         .eq("role", "student")
         .single();
+
+      if (profileError) {
+        console.error('خطأ في جلب ملف الطالب:', profileError);
+        throw new Error('فشل في جلب بيانات الطالب');
+      }
 
       if (profileData) {
         setProfile(profileData);
@@ -81,13 +98,16 @@ export default function StudentDashboard() {
 
   const recordView = async (lessonId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const userSession = localStorage.getItem('user_session');
+      if (!userSession) return;
+      
+      const sessionData = JSON.parse(userSession);
+      if (!sessionData.user_id) return;
 
       // تسجيل مشاهدة الدرس
       await supabase.from("lesson_views").upsert({
         lesson_id: lessonId,
-        student_id: user.id,
+        student_id: sessionData.user_id,
         completed: false,
         watch_duration_minutes: 0
       });

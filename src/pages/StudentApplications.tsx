@@ -114,7 +114,7 @@ function StudentApplicationsContent() {
           body: {
             message: `🎓 مبروك ${application.full_name}!\n\nتم قبول طلب التسجيل في أكاديمية همم التعليمية.\n\n🔑 بيانات الدخول:\nاسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}\n\nالصف: ${application.grade}\nالمواد: ${application.selected_subjects.join(', ')}\n\nيمكنك الآن الدخول للمنصة ومتابعة الدروس.\n\nرابط المنصة: ${window.location.origin}`,
             recipient_type: 'student',
-            teacher_name: application.full_name,
+            student_name: application.full_name,
             phone_number: application.phone
           }
         });
@@ -173,7 +173,7 @@ function StudentApplicationsContent() {
           body: {
             message: `عذراً ${application.full_name},\n\nتم رفض طلب التسجيل في أكاديمية همم التعليمية.\n\nسبب الرفض: ${rejectionReason}\n\nيمكنك التواصل معنا لمزيد من التوضيح أو إعادة التقديم.`,
             recipient_type: 'student',
-            teacher_name: application.full_name,
+            student_name: application.full_name,
             phone_number: application.phone
           }
         });
