@@ -3,11 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Eye, Clock, Users } from "lucide-react";
+import { CheckCircle, XCircle, Eye, Clock, Users, MoreHorizontal, UserCheck, UserX, FileText, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { AuthGuard } from "@/components/AuthGuard";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface StudentApplication {
   id: string;
@@ -20,6 +22,8 @@ interface StudentApplication {
   status: string;
   receipt_url?: string;
   rejection_reason?: string;
+  access_credentials?: string;
+  bank_transfer_details?: string;
   created_at: string;
 }
 
@@ -28,6 +32,7 @@ function StudentApplicationsContent() {
   const [loading, setLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState<StudentApplication | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [selectedAppDetails, setSelectedAppDetails] = useState<StudentApplication | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -205,6 +210,56 @@ function StudentApplicationsContent() {
     }
   };
 
+  // إلغاء تفعيل حساب الطالب
+  const deactivateStudent = async (application: StudentApplication) => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ status: "suspended" })
+        .eq("full_name", application.full_name)
+        .eq("phone", application.phone);
+
+      if (error) throw error;
+
+      toast({
+        title: "تم إلغاء تفعيل الحساب",
+        description: `تم إلغاء تفعيل حساب ${application.full_name}`,
+      });
+    } catch (error) {
+      console.error("خطأ في إلغاء التفعيل:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ في إلغاء تفعيل الحساب",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // إعادة تفعيل حساب الطالب
+  const reactivateStudent = async (application: StudentApplication) => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ status: "approved" })
+        .eq("full_name", application.full_name)
+        .eq("phone", application.phone);
+
+      if (error) throw error;
+
+      toast({
+        title: "تم إعادة تفعيل الحساب",
+        description: `تم إعادة تفعيل حساب ${application.full_name}`,
+      });
+    } catch (error) {
+      console.error("خطأ في إعادة التفعيل:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ في إعادة تفعيل الحساب",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
@@ -274,38 +329,90 @@ function StudentApplicationsContent() {
                   )}
                 </div>
                 
-                {application.status === "pending" && (
-                  <div className="flex flex-col gap-2">
-                    <Button 
-                      onClick={() => approveApplication(application)}
-                      className="w-full"
-                      size="sm"
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      قبول
-                    </Button>
-                    <Button 
-                      variant="destructive" 
-                      onClick={() => setSelectedApp(application)}
-                      className="w-full"
-                      size="sm"
-                    >
-                      <XCircle className="h-4 w-4 mr-1" />
-                      رفض
-                    </Button>
+                <div className="flex flex-col gap-2">
+                  {/* أزرار للطلبات قيد المراجعة */}
+                  {application.status === "pending" && (
+                    <>
+                      <Button 
+                        onClick={() => approveApplication(application)}
+                        className="w-full"
+                        size="sm"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        قبول
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        onClick={() => setSelectedApp(application)}
+                        className="w-full"
+                        size="sm"
+                      >
+                        <XCircle className="h-4 w-4 mr-1" />
+                        رفض
+                      </Button>
+                    </>
+                  )}
+                  
+                  {/* أزرار مشتركة لجميع الطلبات */}
+                  <div className="flex gap-2">
                     {application.receipt_url && (
                       <Button 
                         variant="outline" 
                         onClick={() => window.open(application.receipt_url, '_blank')}
-                        className="w-full"
+                        className="flex-1"
                         size="sm"
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         عرض الإيصال
                       </Button>
                     )}
+                    
+                    {/* زر المزيد مع قائمة منسدلة */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setSelectedAppDetails(application)}>
+                          <FileText className="h-4 w-4 mr-2" />
+                          عرض التفاصيل الكاملة
+                        </DropdownMenuItem>
+                        
+                        {application.status === "approved" && (
+                          <>
+                            <DropdownMenuItem onClick={() => deactivateStudent(application)}>
+                              <UserX className="h-4 w-4 mr-2" />
+                              إلغاء تفعيل الحساب
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        
+                        {application.status !== "approved" && (
+                          <DropdownMenuItem onClick={() => reactivateStudent(application)}>
+                            <UserCheck className="h-4 w-4 mr-2" />
+                            إعادة تفعيل الحساب
+                          </DropdownMenuItem>
+                        )}
+                        
+                        {application.access_credentials && (
+                          <DropdownMenuItem onClick={() => {
+                            const credentials = JSON.parse(application.access_credentials);
+                            navigator.clipboard.writeText(`اسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}`);
+                            toast({
+                              title: "تم النسخ",
+                              description: "تم نسخ بيانات الدخول للحافظة",
+                            });
+                          }}>
+                            <Download className="h-4 w-4 mr-2" />
+                            نسخ بيانات الدخول
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                )}
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -363,6 +470,145 @@ function StudentApplicationsContent() {
               </CardContent>
             </Card>
           </div>
+        )}
+
+        {/* نافذة التفاصيل الكاملة */}
+        {selectedAppDetails && (
+          <Dialog open={!!selectedAppDetails} onOpenChange={() => setSelectedAppDetails(null)}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Users className="h-6 w-6" />
+                  التفاصيل الكاملة - {selectedAppDetails.full_name}
+                </DialogTitle>
+                <DialogDescription>
+                  جميع المعلومات المتعلقة بطلب التسجيل
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-6">
+                {/* المعلومات الأساسية */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">الاسم الكامل</Label>
+                    <p className="text-sm bg-secondary p-2 rounded">{selectedAppDetails.full_name}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">البريد الإلكتروني</Label>
+                    <p className="text-sm bg-secondary p-2 rounded">{selectedAppDetails.email}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">رقم الهاتف</Label>
+                    <p className="text-sm bg-secondary p-2 rounded">{selectedAppDetails.phone}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">الصف</Label>
+                    <p className="text-sm bg-secondary p-2 rounded">الصف {selectedAppDetails.grade}</p>
+                  </div>
+                </div>
+
+                {/* المواد المختارة */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">المواد المختارة</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedAppDetails.selected_subjects.map((subject) => (
+                      <Badge key={subject} variant="secondary">{subject}</Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* المعلومات المالية */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">المبلغ الإجمالي</Label>
+                    <p className="text-lg font-bold text-green-600">{selectedAppDetails.total_amount} ريال عماني</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">حالة الطلب</Label>
+                    <div>{getStatusBadge(selectedAppDetails.status)}</div>
+                  </div>
+                </div>
+
+                {/* بيانات التحويل البنكي */}
+                {selectedAppDetails.bank_transfer_details && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">تفاصيل التحويل البنكي</Label>
+                    <p className="text-sm bg-secondary p-3 rounded whitespace-pre-wrap">
+                      {selectedAppDetails.bank_transfer_details}
+                    </p>
+                  </div>
+                )}
+
+                {/* بيانات الدخول (للطلبات المقبولة) */}
+                {selectedAppDetails.access_credentials && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">بيانات الدخول</Label>
+                    <div className="bg-green-50 border border-green-200 p-3 rounded">
+                      {(() => {
+                        const credentials = JSON.parse(selectedAppDetails.access_credentials);
+                        return (
+                          <div className="space-y-1">
+                            <p><span className="font-medium">اسم المستخدم:</span> {credentials.username}</p>
+                            <p><span className="font-medium">كلمة المرور:</span> {credentials.password}</p>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
+
+                {/* سبب الرفض */}
+                {selectedAppDetails.rejection_reason && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-red-600">سبب الرفض</Label>
+                    <p className="text-sm bg-red-50 border border-red-200 p-3 rounded text-red-700">
+                      {selectedAppDetails.rejection_reason}
+                    </p>
+                  </div>
+                )}
+
+                {/* تاريخ التقديم */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">تاريخ التقديم</Label>
+                  <p className="text-sm bg-secondary p-2 rounded">
+                    {new Date(selectedAppDetails.created_at).toLocaleString('ar-SA')}
+                  </p>
+                </div>
+
+                {/* الإجراءات المتاحة */}
+                <div className="flex flex-wrap gap-2 pt-4 border-t">
+                  {selectedAppDetails.receipt_url && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => window.open(selectedAppDetails.receipt_url, '_blank')}
+                      size="sm"
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      عرض الإيصال
+                    </Button>
+                  )}
+                  
+                  {selectedAppDetails.access_credentials && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        const credentials = JSON.parse(selectedAppDetails.access_credentials);
+                        navigator.clipboard.writeText(`اسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}`);
+                        toast({
+                          title: "تم النسخ",
+                          description: "تم نسخ بيانات الدخول للحافظة",
+                        });
+                      }}
+                      size="sm"
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      نسخ بيانات الدخول
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
     </div>
