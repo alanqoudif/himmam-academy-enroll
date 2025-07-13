@@ -429,7 +429,7 @@ export default function EnrollmentForm() {
                         accept="image/*,.pdf"
                         onChange={handleFileUpload}
                         required
-                        className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                        className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
                       />
                       {receiptFile && (
                         <p className="text-sm text-muted-foreground mt-2">
@@ -437,6 +437,9 @@ export default function EnrollmentForm() {
                           {receiptFile.name}
                         </p>
                       )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        يُقبل ملفات الصور و PDF بحد أقصى 5 ميغابايت
+                      </p>
                     </div>
                   </div>
                 </div>

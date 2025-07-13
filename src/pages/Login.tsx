@@ -141,13 +141,6 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-6 p-4 bg-muted rounded-lg">
-            <h3 className="font-medium mb-2">بيانات تجريبية للاختبار:</h3>
-            <div className="text-sm space-y-1">
-              <div><strong>معلم:</strong> teacher001 / Teacher123!</div>
-              <div><strong>طالب:</strong> student001 / Student123!</div>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

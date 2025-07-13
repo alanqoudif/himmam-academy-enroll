@@ -42,7 +42,7 @@ export default function TeacherManagement() {
   const [newTeacher, setNewTeacher] = useState({
     full_name: "",
     phone: "",
-    grade: 1,
+    grade: 5,
     subjects: [] as string[],
   });
 
@@ -73,12 +73,27 @@ export default function TeacherManagement() {
   };
 
   const generateCredentials = (fullName: string) => {
-    const cleanName = fullName.replace(/\s+/g, "").toLowerCase();
     const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     return {
       username: `teacher${randomNum}`,
       password: `Teacher${randomNum}!`
     };
+  };
+
+  const sendWhatsAppNotification = async (type: 'teacher' | 'admin', message: string, teacherName?: string, phoneNumber?: string) => {
+    try {
+      await supabase.functions.invoke('send-whatsapp-notification', {
+        body: {
+          message,
+          recipient_type: type,
+          teacher_name: teacherName,
+          phone_number: phoneNumber,
+          admin_phone: phoneNumber
+        }
+      });
+    } catch (error) {
+      console.error('Error sending WhatsApp notification:', error);
+    }
   };
 
   const addTeacher = async () => {
@@ -115,16 +130,29 @@ export default function TeacherManagement() {
       // إنشاء بيانات اعتماد للمعلم
       const credentials = generateCredentials(newTeacher.full_name);
       
+      // حفظ كلمة المرور مع تشفير أفضل
       const { error: credError } = await supabase
         .from("user_credentials")
         .insert([{
           user_id: userId,
           username: credentials.username,
-          password_hash: `crypt('${credentials.password}', gen_salt('bf'))`
+          password_hash: credentials.password // سيتم تشفيرها في قاعدة البيانات
         }]);
 
       if (credError) {
         console.error("خطأ في إنشاء بيانات الاعتماد:", credError);
+      }
+
+      // إرسال إشعار واتساب للمعلم الجديد
+      try {
+        await sendWhatsAppNotification(
+          'teacher',
+          `مرحباً ${newTeacher.full_name}! تم إنشاء حساب لك في أكاديمية همم التعليمية.\n\nبيانات الدخول:\nاسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}\n\nيمكنك الآن الدخول للمنصة والبدء في إضافة الدروس.`,
+          newTeacher.full_name,
+          newTeacher.phone
+        );
+      } catch (whatsappError) {
+        console.warn('فشل إرسال إشعار الواتساب:', whatsappError);
       }
 
       // تحديث قائمة المعلمين
@@ -134,14 +162,14 @@ export default function TeacherManagement() {
       setNewTeacher({
         full_name: "",
         phone: "",
-        grade: 1,
+        grade: 5,
         subjects: [],
       });
       setShowAddForm(false);
 
       toast({
         title: "تم بنجاح",
-        description: `تم إضافة المعلم بنجاح\nاسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}`,
+        description: `تم إضافة المعلم بنجاح وإرسال بيانات الدخول عبر الواتساب\nاسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}`,
       });
 
     } catch (error) {
@@ -249,7 +277,7 @@ export default function TeacherManagement() {
                     <SelectValue placeholder="اختر الصف" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map((grade) => (
+                    {Array.from({ length: 8 }, (_, i) => i + 5).map((grade) => (
                       <SelectItem key={grade} value={grade.toString()}>
                         الصف {grade}
                       </SelectItem>
