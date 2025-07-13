@@ -11,6 +11,7 @@ import { Upload, Video, FileText, ExternalLink } from "lucide-react";
 
 interface TeacherProfile {
   id: string;
+  user_id: string;
   full_name: string;
   subjects: string[];
   grade: number;
@@ -201,21 +202,15 @@ export default function TeacherDashboard() {
 
   const addLesson = async () => {
     try {
-      const userSession = localStorage.getItem('user_session');
-      if (!userSession || !profile) {
+      console.log('بدء إضافة درس جديد...');
+      console.log('بيانات الدرس:', newLesson);
+      
+      // التحقق من بيانات المستخدم
+      if (!profile?.user_id) {
+        console.error('لا يوجد معرف مستخدم');
         toast({
           title: "خطأ",
           description: "لا توجد بيانات مستخدم صحيحة",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const sessionData = JSON.parse(userSession);
-      if (!sessionData.user_id) {
-        toast({
-          title: "خطأ", 
-          description: "معرف المستخدم غير موجود",
           variant: "destructive",
         });
         return;
@@ -232,9 +227,20 @@ export default function TeacherDashboard() {
       }
 
       // التحقق من وجود محتوى واحد على الأقل
-      const hasContent = newLesson.video_url.trim() || newLesson.pdf_url.trim() || newLesson.youtube_url.trim();
+      const hasVideoFile = !!newLesson.video_url && !newLesson.video_url.includes('youtube.com');
+      const hasPdfFile = !!newLesson.pdf_url;
+      const hasYoutubeLink = !!newLesson.youtube_url && newLesson.youtube_url.includes('youtube.com');
       
-      if (!hasContent) {
+      console.log('التحقق من المحتوى:', {
+        hasVideoFile,
+        hasPdfFile, 
+        hasYoutubeLink,
+        video_url: newLesson.video_url,
+        pdf_url: newLesson.pdf_url,
+        youtube_url: newLesson.youtube_url
+      });
+      
+      if (!hasVideoFile && !hasPdfFile && !hasYoutubeLink) {
         toast({
           title: "خطأ",
           description: "يرجى إضافة محتوى واحد على الأقل (فيديو، PDF، أو رابط يوتيوب)",
@@ -245,38 +251,29 @@ export default function TeacherDashboard() {
 
       // تحديد أنواع المحتوى المتاحة
       const contentTypes = [];
-      if (newLesson.video_url) contentTypes.push('video');
-      if (newLesson.pdf_url) contentTypes.push('pdf'); 
-      if (newLesson.youtube_url) contentTypes.push('youtube_link');
+      if (hasVideoFile) contentTypes.push('video');
+      if (hasPdfFile) contentTypes.push('pdf');
+      if (hasYoutubeLink) contentTypes.push('youtube_link');
 
-      console.log('إضافة درس جديد:', {
-        title: newLesson.title,
-        subject: newLesson.subject,
-        grade: newLesson.grade,
-        teacher_id: sessionData.user_id,
-        contentTypes: contentTypes
-      });
+      console.log('أنواع المحتوى:', contentTypes);
 
       const lessonData = {
         title: newLesson.title.trim(),
         description: newLesson.description.trim(),
         subject: newLesson.subject,
         grade: newLesson.grade,
-        teacher_id: sessionData.user_id,
-        content_type: contentTypes.join(','), // حفظ الأنواع كنص مفصول بفواصل
+        teacher_id: profile.user_id,
+        content_type: contentTypes.join(','),
         duration_minutes: newLesson.duration_minutes,
-        video_url: newLesson.video_url || null,
-        pdf_url: newLesson.pdf_url || null,
+        video_url: hasYoutubeLink ? newLesson.youtube_url : (hasVideoFile ? newLesson.video_url : null),
+        pdf_url: hasPdfFile ? newLesson.pdf_url : null,
         thumbnail_url: null,
         is_active: true,
         views_count: 0,
         file_size_mb: 0
       };
 
-      // حفظ رابط اليوتيوب في video_url إذا لم يكن هناك فيديو مرفوع
-      if (newLesson.youtube_url && !newLesson.video_url) {
-        lessonData.video_url = newLesson.youtube_url;
-      }
+      console.log('بيانات الدرس النهائية:', lessonData);
 
       const { data, error } = await supabase
         .from("lessons")
@@ -291,12 +288,15 @@ export default function TeacherDashboard() {
 
       console.log("تم إنشاء الدرس بنجاح:", data);
       
-      setLessons([data, ...lessons]);
+      // تحديث قائمة الدروس
+      await fetchTeacherData();
+      
+      // إعادة تعيين النموذج
       setNewLesson({
         title: "",
         description: "",
         subject: "",
-        grade: 5,
+        grade: profile.grade || 5,
         content_types: [],
         video_url: "",
         pdf_url: "",
@@ -314,7 +314,9 @@ export default function TeacherDashboard() {
       console.error("خطأ في إضافة الدرس:", error);
       
       let errorMessage = "حدث خطأ في إضافة الدرس";
-      if (error?.message) {
+      if (error?.message?.includes('row-level security')) {
+        errorMessage = "ليس لديك صلاحية لإضافة الدروس. يرجى التواصل مع الإدارة.";
+      } else if (error?.message) {
         errorMessage = `خطأ: ${error.message}`;
       } else if (error?.details) {
         errorMessage = `تفاصيل الخطأ: ${error.details}`;
