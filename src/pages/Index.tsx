@@ -167,7 +167,7 @@ const Index = () => {
           <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
             انضم إلى آلاف الطلاب الذين اختاروا أكاديمية همم لتحقيق أهدافهم الأكاديمية
           </p>
-          <Button onClick={() => navigate('/enroll')} size="lg" variant="secondary" className="bg-white text-academy-orange hover:bg-white/90 font-semibold px-8 py-4 text-lg shadow-medium">
+          <Button onClick={() => navigate('/enroll')} size="lg" variant="secondary" className="bg-white text-academy-orange hover:bg-white/90 font-semibold text-lg shadow-medium px-0 py-0">
             <BookOpen className="w-6 h-6 mr-2" />
             سجل الآن واحصل على خصم خاص
           </Button>
