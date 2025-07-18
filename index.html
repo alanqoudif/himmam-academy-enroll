@@ -14,6 +14,14 @@
     
     <!-- Favicon -->
     <link rel="icon" href="/lovable-uploads/ad6d0aa7-ee9b-4c8b-8205-791c0b7943c8.png" type="image/png">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#f59e0b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="همم">
+    <link rel="apple-touch-icon" href="/lovable-uploads/ad6d0aa7-ee9b-4c8b-8205-791c0b7943c8.png">
 
     <meta property="og:title" content="himmam-academy-enroll" />
     <meta property="og:description" content="Lovable Generated Project" />
@@ -28,5 +36,35 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- PWA Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+              
+              // تحديث Service Worker إذا كان هناك إصدار جديد
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                if (newWorker) {
+                  newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed') {
+                      if (navigator.serviceWorker.controller) {
+                        console.log('New SW content available');
+                        // يمكن إظهار إشعار للمستخدم هنا
+                      }
+                    }
+                  });
+                }
+              });
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
   </body>
 </html>

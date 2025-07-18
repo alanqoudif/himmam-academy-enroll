@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AuthGuard, logout } from "@/components/AuthGuard";
@@ -28,7 +27,6 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
-import * as XLSX from 'xlsx';
 
 interface Enrollment {
   id: string;
@@ -47,9 +45,6 @@ interface Enrollment {
   reviewed_at?: string;
   created_at: string;
   updated_at: string;
-  gender?: string;
-  social_security_eligible?: boolean;
-  social_security_proof_url?: string;
 }
 
 function AdminDashboardContent() {
@@ -63,8 +58,6 @@ function AdminDashboardContent() {
   const [adminPhone, setAdminPhone] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [tempAdminPhone, setTempAdminPhone] = useState("");
-  const [exportGrade, setExportGrade] = useState<string>('all');
-  const [exportStatus, setExportStatus] = useState<string>('all');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -142,66 +135,6 @@ function AdminDashboardContent() {
     }
   };
 
-  const exportToExcel = async () => {
-    try {
-      // فلترة البيانات حسب الصف والحالة
-      let filteredEnrollments = enrollments;
-      
-      if (exportGrade !== 'all') {
-        filteredEnrollments = filteredEnrollments.filter(enrollment => 
-          enrollment.grade === parseInt(exportGrade)
-        );
-      }
-      
-      if (exportStatus !== 'all') {
-        filteredEnrollments = filteredEnrollments.filter(enrollment => 
-          enrollment.status === exportStatus
-        );
-      }
-
-      // تحضير البيانات للتصدير
-      const exportData = filteredEnrollments.map(enrollment => ({
-        'الاسم الكامل': enrollment.full_name,
-        'البريد الإلكتروني': enrollment.email,
-        'رقم الهاتف': enrollment.phone,
-        'الجنس': enrollment.gender === 'male' ? 'ذكر' : 'أنثى',
-        'الصف': enrollment.grade,
-        'المواد المختارة': enrollment.selected_subjects.join(', '),
-        'إجمالي المبلغ': enrollment.total_amount,
-        'مستحق للضمان الاجتماعي': enrollment.social_security_eligible ? 'نعم' : 'لا',
-        'الحالة': enrollment.status === 'pending' ? 'في الانتظار' : 
-                 enrollment.status === 'approved' ? 'مقبول' : 'مرفوض',
-        'تاريخ التسجيل': new Date(enrollment.created_at).toLocaleDateString('ar-EG'),
-        'تفاصيل التحويل': enrollment.bank_transfer_details || 'غير متوفر',
-        'سبب الرفض': enrollment.rejection_reason || 'غير متوفر'
-      }));
-
-      // إنشاء ملف Excel
-      const worksheet = XLSX.utils.json_to_sheet(exportData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'تسجيلات الطلاب');
-
-      // تحديد اسم الملف
-      const fileName = `students_${exportGrade !== 'all' ? `grade_${exportGrade}_` : ''}${exportStatus !== 'all' ? `${exportStatus}_` : ''}${new Date().toLocaleDateString('ar-EG').replace(/\//g, '-')}.xlsx`;
-
-      // تحميل الملف
-      XLSX.writeFile(workbook, fileName);
-
-      toast({
-        title: "تم التصدير بنجاح",
-        description: `تم تصدير ${filteredEnrollments.length} طالب إلى ملف Excel`
-      });
-
-    } catch (error) {
-      console.error('Error exporting to Excel:', error);
-      toast({
-        title: "خطأ",
-        description: "فشل في تصدير البيانات",
-        variant: "destructive"
-      });
-    }
-  };
-
   const stats = {
     total: enrollments.length,
     pending: enrollments.filter(e => e.status === 'pending').length,
@@ -256,57 +189,6 @@ function AdminDashboardContent() {
             </Button>
           </div>
         </div>
-
-        {/* Export Section */}
-        <Card className="shadow-soft mb-8">
-          <CardHeader>
-            <CardTitle className="text-accent">تصدير بيانات الطلاب</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4 items-end">
-              <div className="flex-1">
-                <label className="text-sm font-medium mb-2 block">الصف</label>
-                <Select value={exportGrade} onValueChange={setExportGrade}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="اختر الصف" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">جميع الصفوف</SelectItem>
-                    <SelectItem value="5">الصف الخامس</SelectItem>
-                    <SelectItem value="6">الصف السادس</SelectItem>
-                    <SelectItem value="7">الصف السابع</SelectItem>
-                    <SelectItem value="8">الصف الثامن</SelectItem>
-                    <SelectItem value="9">الصف التاسع</SelectItem>
-                    <SelectItem value="10">الصف العاشر</SelectItem>
-                    <SelectItem value="11">الصف الحادي عشر</SelectItem>
-                    <SelectItem value="12">الصف الثاني عشر</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex-1">
-                <label className="text-sm font-medium mb-2 block">الحالة</label>
-                <Select value={exportStatus} onValueChange={setExportStatus}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="اختر الحالة" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">جميع الحالات</SelectItem>
-                    <SelectItem value="pending">في الانتظار</SelectItem>
-                    <SelectItem value="approved">مقبول</SelectItem>
-                    <SelectItem value="rejected">مرفوض</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button 
-                onClick={exportToExcel}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-              >
-                <Download className="w-4 h-4" />
-                تصدير إلى Excel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

@@ -39,8 +39,6 @@ export default function EnrollmentForm() {
     gender: "male" as "male" | "female"
   });
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [isSocialSecurityEligible, setIsSocialSecurityEligible] = useState(false);
-  const [socialSecurityProofFile, setSocialSecurityProofFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -120,40 +118,8 @@ export default function EnrollmentForm() {
     }
   };
 
-  const handleSocialSecurityFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "خطأ",
-          description: "حجم الملف كبير جداً (الحد الأقصى 5 ميغابايت)",
-          variant: "destructive"
-        });
-        return;
-      }
-      setSocialSecurityProofFile(file);
-    }
-  };
-
   const uploadReceipt = async (file: File) => {
     const fileName = `receipt_${Date.now()}_${file.name}`;
-    const { data, error } = await supabase.storage
-      .from('payment-receipts')
-      .upload(fileName, file);
-
-    if (error) {
-      throw error;
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('payment-receipts')
-      .getPublicUrl(fileName);
-
-    return publicUrl;
-  };
-
-  const uploadSocialSecurityProof = async (file: File) => {
-    const fileName = `social_security_${Date.now()}_${file.name}`;
     const { data, error } = await supabase.storage
       .from('payment-receipts')
       .upload(fileName, file);
@@ -225,15 +191,6 @@ export default function EnrollmentForm() {
       return;
     }
 
-    if (isSocialSecurityEligible && !socialSecurityProofFile) {
-      toast({
-        title: "خطأ",
-        description: "يرجى رفع إثبات الضمان الاجتماعي",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -241,14 +198,6 @@ export default function EnrollmentForm() {
       console.log('Starting file upload...');
       const receiptUrl = await uploadReceipt(receiptFile);
       console.log('File uploaded successfully:', receiptUrl);
-
-      // رفع إثبات الضمان الاجتماعي إذا كان مطلوباً
-      let socialSecurityProofUrl = null;
-      if (isSocialSecurityEligible && socialSecurityProofFile) {
-        console.log('Uploading social security proof...');
-        socialSecurityProofUrl = await uploadSocialSecurityProof(socialSecurityProofFile);
-        console.log('Social security proof uploaded successfully:', socialSecurityProofUrl);
-      }
 
       // إنشاء التسجيل
       const formattedPhone = formatPhoneNumber(formData.phone);
@@ -262,8 +211,6 @@ export default function EnrollmentForm() {
         receipt_url: receiptUrl,
         bank_transfer_details: formData.transferDetails,
         gender: formData.gender,
-        social_security_eligible: isSocialSecurityEligible,
-        social_security_proof_url: socialSecurityProofUrl,
         status: 'pending'
       };
 
@@ -324,8 +271,6 @@ export default function EnrollmentForm() {
       setSelectedGrade(null);
       setSelectedSubjects([]);
       setReceiptFile(null);
-      setIsSocialSecurityEligible(false);
-      setSocialSecurityProofFile(null);
 
     } catch (error) {
       console.error('Full error details:', error);
@@ -492,47 +437,6 @@ export default function EnrollmentForm() {
                           <DollarSign className="w-5 h-5 inline-block" />
                           {calculateTotal()} ريال عماني
                         </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* الضمان الاجتماعي */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-accent">الضمان الاجتماعي</h3>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="socialSecurity"
-                      checked={isSocialSecurityEligible}
-                      onCheckedChange={(checked) => setIsSocialSecurityEligible(checked as boolean)}
-                    />
-                    <Label htmlFor="socialSecurity" className="cursor-pointer">
-                      هل أنت من المستفيدين من الضمان الاجتماعي؟
-                    </Label>
-                  </div>
-
-                  {isSocialSecurityEligible && (
-                    <div>
-                      <Label htmlFor="socialSecurityProof">إثبات الضمان الاجتماعي *</Label>
-                      <div className="mt-1">
-                        <Input
-                          id="socialSecurityProof"
-                          type="file"
-                          accept="image/*,.pdf"
-                          onChange={handleSocialSecurityFileUpload}
-                          required
-                          className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
-                        />
-                        {socialSecurityProofFile && (
-                          <p className="text-sm text-muted-foreground mt-2">
-                            <FileText className="w-4 h-4 inline-block mr-1" />
-                            {socialSecurityProofFile.name}
-                          </p>
-                        )}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          يُقبل ملفات الصور و PDF بحد أقصى 5 ميغابايت
-                        </p>
                       </div>
                     </div>
                   )}
