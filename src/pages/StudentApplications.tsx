@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import * as XLSX from 'xlsx';
 
 interface StudentApplication {
   id: string;
@@ -78,9 +79,18 @@ function StudentApplicationsContent() {
 
   const generateStudentCredentials = (fullName: string) => {
     const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    
+    // إنشاء كلمة مرور قوية بناء على اسم الطالب
+    const nameWords = fullName.trim().split(' ');
+    const firstName = nameWords[0] || 'Student';
+    const lastName = nameWords[nameWords.length - 1] || '';
+    
+    // إنشاء كلمة مرور تحتوي على اسم الطالب ورقم عشوائي
+    const passwordBase = firstName + (lastName ? lastName.charAt(0).toUpperCase() : '') + randomNum;
+    
     return {
       username: `student${randomNum}`,
-      password: `Student${randomNum}!`
+      password: passwordBase + '@2024'
     };
   };
 
@@ -133,7 +143,7 @@ function StudentApplicationsContent() {
       try {
         await supabase.functions.invoke('send-whatsapp-notification', {
           body: {
-            message: `🎓 مبروك ${application.full_name}!\n\nتم قبول طلب التسجيل في أكاديمية همم التعليمية.\n\n🔑 بيانات الدخول:\nاسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}\n\nالصف: ${application.grade}\nالمواد: ${application.selected_subjects.join(', ')}\n\nيمكنك الآن الدخول للمنصة ومتابعة الدروس.\n\nرابط المنصة: ${window.location.origin}`,
+            message: `🎓 مبروك ${application.full_name}!\n\nتم قبول طلب التسجيل في أكاديمية همم التعليمية.\n\n🔑 بيانات الدخول:\n👤 اسم المستخدم: ${credentials.username}\n🔐 كلمة المرور: ${credentials.password}\n\n📚 الصف: ${application.grade}\n📖 المواد: ${application.selected_subjects.join(', ')}\n\nيمكنك الآن الدخول للمنصة ومتابعة الدروس.`,
             recipient_type: 'student',
             student_name: application.full_name,
             phone_number: application.phone,
@@ -254,7 +264,48 @@ function StudentApplicationsContent() {
     }
   };
 
-  // إعادة تفعيل حساب الطالب
+  // تصدير البيانات إلى Excel
+  const exportToExcel = (data: StudentApplication[], filename: string) => {
+    const exportData = data.map(app => ({
+      'الاسم': app.full_name,
+      'البريد الإلكتروني': app.email,
+      'رقم الهاتف': app.phone,
+      'الصف': app.grade,
+      'الجنس': app.gender === 'male' ? 'ذكر' : 'أنثى',
+      'المواد': app.selected_subjects.join(', '),
+      'المبلغ الإجمالي': `${app.total_amount} ريال عماني`,
+      'الحالة': app.status === 'approved' ? 'مقبول' : app.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة',
+      'تاريخ التقديم': new Date(app.created_at).toLocaleDateString('ar-SA'),
+      'سبب الرفض': app.rejection_reason || '',
+      'اسم المستخدم': app.access_credentials ? JSON.parse(app.access_credentials).username : '',
+      'كلمة المرور': app.access_credentials ? JSON.parse(app.access_credentials).password : ''
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'الطلاب');
+    XLSX.writeFile(wb, filename);
+  };
+
+  // تصدير جميع الطلاب
+  const exportAllStudents = () => {
+    exportToExcel(filteredApplications, `جميع_الطلاب_${new Date().toLocaleDateString('ar-SA').replace(/\//g, '-')}.xlsx`);
+    toast({
+      title: "تم التصدير",
+      description: `تم تصدير ${filteredApplications.length} طالب إلى ملف Excel`,
+    });
+  };
+
+  // تصدير حسب الحالة
+  const exportByStatus = (status: string) => {
+    const statusData = filteredApplications.filter(app => app.status === status);
+    const statusName = status === 'approved' ? 'المقبولين' : status === 'rejected' ? 'المرفوضين' : 'قيد_المراجعة';
+    exportToExcel(statusData, `الطلاب_${statusName}_${new Date().toLocaleDateString('ar-SA').replace(/\//g, '-')}.xlsx`);
+    toast({
+      title: "تم التصدير",
+      description: `تم تصدير ${statusData.length} طالب إلى ملف Excel`,
+    });
+  };
   const reactivateStudent = async (application: StudentApplication) => {
     try {
       const { error } = await supabase
@@ -314,6 +365,34 @@ function StudentApplicationsContent() {
           <div>
             <h1 className="text-3xl font-bold text-foreground">طلبات التسجيل</h1>
             <p className="text-muted-foreground mt-2">مراجعة وإدارة طلبات تسجيل الطلاب</p>
+          </div>
+          <div className="flex gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  تصدير البيانات
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={exportAllStudents}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  تصدير جميع الطلاب
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportByStatus('approved')}>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  تصدير المقبولين فقط
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportByStatus('rejected')}>
+                  <XCircle className="h-4 w-4 mr-2" />
+                  تصدير المرفوضين فقط
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportByStatus('pending')}>
+                  <Clock className="h-4 w-4 mr-2" />
+                  تصدير قيد المراجعة فقط
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

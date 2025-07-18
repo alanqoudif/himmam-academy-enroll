@@ -50,11 +50,31 @@ export default function Login() {
       const userData = data[0];
       const profileData = userData.profile_data as any;
 
-      // حفظ بيانات المستخدم في localStorage
-      localStorage.setItem('user_session', JSON.stringify({
-        user_id: userData.user_id,
-        profile: profileData
-      }));
+      // فحص وإنهاء الجلسات الأخرى للطلاب
+      if (profileData.role === 'student') {
+        // إزالة أي جلسات أخرى للطالب
+        const existingSessions = Object.keys(localStorage).filter(key => 
+          key.startsWith('user_session_') && key !== `user_session_${userData.user_id}`
+        );
+        existingSessions.forEach(sessionKey => localStorage.removeItem(sessionKey));
+        
+        // حفظ الجلسة الجديدة مع timestamp
+        const sessionData = {
+          user_id: userData.user_id,
+          profile: profileData,
+          login_time: Date.now(),
+          device_id: crypto.randomUUID()
+        };
+        
+        localStorage.setItem('user_session', JSON.stringify(sessionData));
+        localStorage.setItem(`user_session_${userData.user_id}`, JSON.stringify(sessionData));
+      } else {
+        // للأدمن والمعلمين (جلسة عادية)
+        localStorage.setItem('user_session', JSON.stringify({
+          user_id: userData.user_id,
+          profile: profileData
+        }));
+      }
 
       toast({
         title: "مرحباً بك",
