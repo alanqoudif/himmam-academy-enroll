@@ -12,7 +12,7 @@ const Pricing = () => {
     {
       title: "الصفوف 5-8",
       subtitle: "المرحلة الأساسية",
-      price: "5",
+      price: "25",
       currency: "ر.ع",
       period: "للمادة الواحدة",
       color: "academy-orange",
@@ -30,7 +30,7 @@ const Pricing = () => {
     {
       title: "الصف التاسع",
       subtitle: "التأسيس للمرحلة الثانوية",
-      price: "5",
+      price: "25",
       currency: "ر.ع",
       period: "للمادة الواحدة",
       color: "academy-red",
@@ -48,7 +48,7 @@ const Pricing = () => {
     {
       title: "الصفوف 10-12",
       subtitle: "المرحلة الثانوية",
-      price: "10",
+      price: "25",
       currency: "ر.ع",
       period: "للمادة الواحدة",
       color: "academy-purple",
