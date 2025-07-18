@@ -1,0 +1,35 @@
+{
+  "name": "أكاديمية همم التعليمية",
+  "short_name": "همم",
+  "description": "منصة التعلم الإلكتروني لأكاديمية همم",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "/lovable-uploads/ad6d0aa7-ee9b-4c8b-8205-791c0b7943c8.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/lovable-uploads/ad6d0aa7-ee9b-4c8b-8205-791c0b7943c8.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "learning"],
+  "screenshots": [
+    {
+      "src": "/lovable-uploads/ad6d0aa7-ee9b-4c8b-8205-791c0b7943c8.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+}
