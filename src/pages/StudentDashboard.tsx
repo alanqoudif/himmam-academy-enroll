@@ -5,8 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Video, FileText, ExternalLink, Play, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import PWAInstallPrompt from "@/components/PWAInstallPrompt";
-import OfflineDownloadManager from "@/components/OfflineDownloadManager";
 
 interface StudentProfile {
   id: string;
@@ -139,11 +137,6 @@ export default function StudentDashboard() {
     recordView(lesson.id);
   };
 
-  const handleOfflineLesson = (lesson: Lesson) => {
-    // فتح الدرس من الـ cache
-    setSelectedLesson(lesson);
-  };
-
   const renderLessonContent = () => {
     if (!selectedLesson) return null;
 
@@ -210,7 +203,6 @@ export default function StudentDashboard() {
 
   return (
     <div className="min-h-screen bg-background p-6">
-      <PWAInstallPrompt />
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">منصة التعلم</h1>
@@ -239,12 +231,6 @@ export default function StudentDashboard() {
             </div>
           </CardContent>
         </Card>
-
-        {/* إدارة التحميل للاستخدام بدون انترنت */}
-        <OfflineDownloadManager 
-          lessons={lessons} 
-          onOfflineLesson={handleOfflineLesson}
-        />
 
         {/* الدروس المتاحة */}
         <div className="mb-6">
