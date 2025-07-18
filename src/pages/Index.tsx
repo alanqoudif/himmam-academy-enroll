@@ -3,12 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCap, BookOpen, Users, Award, ArrowLeft } from "lucide-react";
 import Header from "@/components/Header";
-import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 const Index = () => {
   const navigate = useNavigate();
   return <div className="min-h-screen bg-gradient-accent font-arabic" dir="rtl">
       <Header />
-      <PWAInstallPrompt />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
