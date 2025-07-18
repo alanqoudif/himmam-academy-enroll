@@ -193,7 +193,7 @@ const About = () => {
                   <BookOpen className="w-5 h-5 ml-2" />
                   سجل الآن
                 </Button>
-                <Button onClick={() => navigate('/contact')} variant="outline" size="lg" className="border-white hover:bg-white text-slate-950">
+                <Button onClick={() => navigate('/contact')} variant="outline" size="lg" className="border-white text-slate-950 bg-slate-300 hover:bg-slate-200">
                   <Users className="w-5 h-5 ml-2" />
                   تواصل معنا
                 </Button>
