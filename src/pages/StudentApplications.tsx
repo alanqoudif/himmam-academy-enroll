@@ -28,6 +28,8 @@ interface StudentApplication {
   access_credentials?: string;
   bank_transfer_details?: string;
   gender?: string;
+  social_security_eligible?: boolean;
+  social_security_proof_url?: string;
   created_at: string;
 }
 
@@ -80,12 +82,25 @@ function StudentApplicationsContent() {
   const generateStudentCredentials = (fullName: string) => {
     const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     
-    // إنشاء كلمة مرور قوية بناء على اسم الطالب
-    const nameWords = fullName.trim().split(' ');
-    const firstName = nameWords[0] || 'Student';
-    const lastName = nameWords[nameWords.length - 1] || '';
+    // تحويل الأسماء العربية إلى حروف إنجليزية
+    const arabicToEnglish: { [key: string]: string } = {
+      'أ': 'A', 'ا': 'A', 'إ': 'A', 'آ': 'A',
+      'ب': 'B', 'ت': 'T', 'ث': 'TH', 'ج': 'J', 'ح': 'H', 'خ': 'KH',
+      'د': 'D', 'ذ': 'TH', 'ر': 'R', 'ز': 'Z', 'س': 'S', 'ش': 'SH',
+      'ص': 'S', 'ض': 'D', 'ط': 'T', 'ظ': 'Z', 'ع': 'A', 'غ': 'GH',
+      'ف': 'F', 'ق': 'Q', 'ك': 'K', 'ل': 'L', 'م': 'M', 'ن': 'N',
+      'ه': 'H', 'و': 'W', 'ي': 'Y', 'ى': 'Y', 'ة': 'H'
+    };
     
-    // إنشاء كلمة مرور تحتوي على اسم الطالب ورقم عشوائي
+    const convertArabicToEnglish = (text: string) => {
+      return text.split('').map(char => arabicToEnglish[char] || char).join('');
+    };
+    
+    const nameWords = fullName.trim().split(' ');
+    const firstName = convertArabicToEnglish(nameWords[0] || 'Student');
+    const lastName = nameWords.length > 1 ? convertArabicToEnglish(nameWords[nameWords.length - 1]) : '';
+    
+    // إنشاء كلمة مرور باللغة الإنجليزية
     const passwordBase = firstName + (lastName ? lastName.charAt(0).toUpperCase() : '') + randomNum;
     
     return {
@@ -630,6 +645,28 @@ function StudentApplicationsContent() {
                           </div>
                         );
                       })()}
+                    </div>
+                  </div>
+                )}
+
+                {/* معلومات الضمان الاجتماعي */}
+                {selectedAppDetails.social_security_eligible && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">الضمان الاجتماعي</Label>
+                    <div className="bg-blue-50 border border-blue-200 p-3 rounded">
+                      <p className="text-sm text-blue-800 mb-2">
+                        <span className="font-medium">مستفيد من الضمان الاجتماعي:</span> نعم
+                      </p>
+                      {selectedAppDetails.social_security_proof_url && (
+                        <Button 
+                          variant="outline" 
+                          onClick={() => window.open(selectedAppDetails.social_security_proof_url, '_blank')}
+                          size="sm"
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          عرض إثبات الضمان الاجتماعي
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}

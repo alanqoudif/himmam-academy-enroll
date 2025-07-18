@@ -24,9 +24,10 @@ serve(async (req) => {
   }
 
   try {
-    const { message, recipient_type, student_name, phone_number, admin_phone, grade, subjects, gender } = await req.json()
+    const requestBody = await req.json();
+    const { message, recipient_type, student_name, phone_number, admin_phone, grade, subjects, gender, include_login_instructions = true } = requestBody;
     
-    console.log('Received request:', { message, recipient_type, student_name, phone_number, admin_phone, grade, subjects, gender });
+    console.log('Received request:', { message, recipient_type, student_name, phone_number, admin_phone, grade, subjects, gender, include_login_instructions });
     
     // استخدام البيانات مباشرة كما طلبت
     const instance_id = "6848073DE839C"
@@ -88,8 +89,13 @@ serve(async (req) => {
       target_phone = formatPhoneNumber(phone_number);
       const loginUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com') || 'https://platform-url.com'}/login`;
       
-      // تحسين الرسالة مع رابط تسجيل الدخول المباشر وشرح مفصل
-      full_message = `مرحباً ${student_name || ''}،\n\n${message}\n\n🔗 رابط تسجيل الدخول المباشر:\n${loginUrl}\n\n📋 طريقة تسجيل الدخول:\n\n1️⃣ اضغط على الرابط أعلاه للانتقال مباشرة لصفحة تسجيل الدخول\n\n2️⃣ ستجد خانتين في الصفحة:\n   • خانة "اسم المستخدم" - ادخل فيها اسم المستخدم المرسل لك\n   • خانة "كلمة المرور" - ادخل فيها كلمة المرور المرسلة لك\n\n3️⃣ اضغط على زر "تسجيل الدخول"\n\n4️⃣ بعد تسجيل الدخول ستتمكن من:\n   • مشاهدة دروسك\n   • الوصول لجميع المواد المسجل فيها\n   • متابعة تقدمك الدراسي\n\n⚠️ مهم: من أجل الأمان، يُنصح بتغيير كلمة المرور بعد أول تسجيل دخول${whatsappGroups}`;
+      if (include_login_instructions) {
+        // تحسين الرسالة مع رابط تسجيل الدخول المباشر وشرح مفصل
+        full_message = `مرحباً ${student_name || ''}،\n\n${message}\n\n🔗 رابط تسجيل الدخول المباشر:\n${loginUrl}\n\n📋 طريقة تسجيل الدخول:\n\n1️⃣ اضغط على الرابط أعلاه للانتقال مباشرة لصفحة تسجيل الدخول\n\n2️⃣ ستجد خانتين في الصفحة:\n   • خانة "اسم المستخدم" - ادخل فيها اسم المستخدم المرسل لك\n   • خانة "كلمة المرور" - ادخل فيها كلمة المرور المرسلة لك\n\n3️⃣ اضغط على زر "تسجيل الدخول"\n\n4️⃣ بعد تسجيل الدخول ستتمكن من:\n   • مشاهدة دروسك\n   • الوصول لجميع المواد المسجل فيها\n   • متابعة تقدمك الدراسي\n\n⚠️ مهم: من أجل الأمان، يُنصح بتغيير كلمة المرور بعد أول تسجيل دخول${whatsappGroups}`;
+      } else {
+        // رسالة بسيطة بدون تعليمات الدخول
+        full_message = `مرحباً ${student_name || ''}،\n\n${message}`;
+      }
     } else if (recipient_type === 'admin') {
       target_phone = formatPhoneNumber(admin_phone_number);
       full_message = message;
