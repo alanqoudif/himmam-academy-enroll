@@ -44,6 +44,21 @@
           navigator.serviceWorker.register('/sw.js')
             .then((registration) => {
               console.log('SW registered: ', registration);
+              
+              // تحديث Service Worker إذا كان هناك إصدار جديد
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                if (newWorker) {
+                  newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed') {
+                      if (navigator.serviceWorker.controller) {
+                        console.log('New SW content available');
+                        // يمكن إظهار إشعار للمستخدم هنا
+                      }
+                    }
+                  });
+                }
+              });
             })
             .catch((registrationError) => {
               console.log('SW registration failed: ', registrationError);
