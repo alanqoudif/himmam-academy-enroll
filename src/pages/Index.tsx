@@ -3,12 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCap, BookOpen, Users, Award, ArrowLeft } from "lucide-react";
 import Header from "@/components/Header";
-
 const Index = () => {
   const navigate = useNavigate();
-
-  return (
-    <div className="min-h-screen bg-gradient-accent font-arabic" dir="rtl">
+  return <div className="min-h-screen bg-gradient-accent font-arabic" dir="rtl">
       <Header />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
@@ -24,11 +21,7 @@ const Index = () => {
           </p>
           
           <div className="flex justify-center">
-            <Button 
-              onClick={() => navigate('/enroll')}
-              size="lg"
-              className="bg-gradient-primary hover:opacity-90 text-white font-semibold px-8 py-4 text-lg shadow-medium"
-            >
+            <Button onClick={() => navigate('/enroll')} size="lg" className="bg-gradient-primary hover:opacity-90 text-white font-semibold px-8 py-4 text-lg shadow-medium">
               <BookOpen className="w-6 h-6 mr-2" />
               سجل الآن
             </Button>
@@ -89,7 +82,7 @@ const Index = () => {
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-primary"></div>
               <CardHeader className="text-center pt-8">
                 <CardTitle className="text-2xl text-accent">الصفوف 5-8</CardTitle>
-                <div className="text-4xl font-bold text-academy-orange my-4">5 ر.ع</div>
+                <div className="text-4xl font-bold text-academy-orange my-4">15 ر.ع</div>
                 <p className="text-muted-foreground">للمادة الواحدة</p>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -115,8 +108,8 @@ const Index = () => {
             <Card className="shadow-medium border-0 relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-secondary"></div>
               <CardHeader className="text-center pt-8">
-                <CardTitle className="text-2xl text-accent">الصف التاسع</CardTitle>
-                <div className="text-4xl font-bold text-academy-red my-4">5 ر.ع</div>
+                <CardTitle className="text-2xl text-accent">الصفوف من 10-11</CardTitle>
+                <div className="text-4xl font-bold text-academy-red my-4">25 ر.ع</div>
                 <p className="text-muted-foreground">للمادة الواحدة</p>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -142,8 +135,8 @@ const Index = () => {
             <Card className="shadow-medium border-0 relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-primary"></div>
               <CardHeader className="text-center pt-8">
-                <CardTitle className="text-2xl text-accent">الصفوف 10-12</CardTitle>
-                <div className="text-4xl font-bold text-academy-purple my-4">10 ر.ع</div>
+                <CardTitle className="text-2xl text-accent">الصف 12</CardTitle>
+                <div className="text-4xl font-bold text-academy-purple my-4">25 ر.ع</div>
                 <p className="text-muted-foreground">للمادة الواحدة</p>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -174,19 +167,12 @@ const Index = () => {
           <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
             انضم إلى آلاف الطلاب الذين اختاروا أكاديمية همم لتحقيق أهدافهم الأكاديمية
           </p>
-          <Button 
-            onClick={() => navigate('/enroll')}
-            size="lg"
-            variant="secondary"
-            className="bg-white text-academy-orange hover:bg-white/90 font-semibold px-8 py-4 text-lg shadow-medium"
-          >
+          <Button onClick={() => navigate('/enroll')} size="lg" variant="secondary" className="bg-white text-academy-orange hover:bg-white/90 font-semibold px-8 py-4 text-lg shadow-medium">
             <BookOpen className="w-6 h-6 mr-2" />
             سجل الآن واحصل على خصم خاص
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
