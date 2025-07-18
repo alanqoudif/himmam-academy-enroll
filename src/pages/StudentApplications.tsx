@@ -24,6 +24,7 @@ interface StudentApplication {
   rejection_reason?: string;
   access_credentials?: string;
   bank_transfer_details?: string;
+  gender?: string;
   created_at: string;
 }
 
@@ -120,7 +121,10 @@ function StudentApplicationsContent() {
             message: `🎓 مبروك ${application.full_name}!\n\nتم قبول طلب التسجيل في أكاديمية همم التعليمية.\n\n🔑 بيانات الدخول:\nاسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}\n\nالصف: ${application.grade}\nالمواد: ${application.selected_subjects.join(', ')}\n\nيمكنك الآن الدخول للمنصة ومتابعة الدروس.\n\nرابط المنصة: ${window.location.origin}`,
             recipient_type: 'student',
             student_name: application.full_name,
-            phone_number: application.phone
+            phone_number: application.phone,
+            grade: application.grade,
+            subjects: application.selected_subjects,
+            gender: application.gender
           }
         });
       } catch (whatsappError) {

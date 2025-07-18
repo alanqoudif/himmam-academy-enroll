@@ -35,7 +35,8 @@ export default function EnrollmentForm() {
     fullName: "",
     email: "",
     phone: "",
-    transferDetails: ""
+    transferDetails: "",
+    gender: "male" as "male" | "female"
   });
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -189,6 +190,7 @@ export default function EnrollmentForm() {
         total_amount: calculateTotal(),
         receipt_url: receiptUrl,
         bank_transfer_details: formData.transferDetails,
+        gender: formData.gender,
         status: 'pending'
       };
 
@@ -245,7 +247,7 @@ export default function EnrollmentForm() {
       });
 
       // إعادة تعيين النموذج
-      setFormData({ fullName: "", email: "", phone: "", transferDetails: "" });
+      setFormData({ fullName: "", email: "", phone: "", transferDetails: "", gender: "male" });
       setSelectedGrade(null);
       setSelectedSubjects([]);
       setReceiptFile(null);
@@ -341,6 +343,19 @@ export default function EnrollmentForm() {
                       className="mt-1"
                       placeholder="96812345678"
                     />
+                  </div>
+
+                  <div>
+                    <Label>الجنس *</Label>
+                    <Select onValueChange={(value) => setFormData({...formData, gender: value as "male" | "female"})}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="اختر الجنس" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">ذكر</SelectItem>
+                        <SelectItem value="female">أنثى</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 

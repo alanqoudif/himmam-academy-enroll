@@ -337,6 +337,7 @@ export type Database = {
           created_at: string
           email: string
           full_name: string
+          gender: string | null
           grade: number
           id: string
           phone: string
@@ -355,6 +356,7 @@ export type Database = {
           created_at?: string
           email: string
           full_name: string
+          gender?: string | null
           grade: number
           id?: string
           phone: string
@@ -373,6 +375,7 @@ export type Database = {
           created_at?: string
           email?: string
           full_name?: string
+          gender?: string | null
           grade?: number
           id?: string
           phone?: string
@@ -468,6 +471,39 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string
+        }
+        Relationships: []
+      }
+      whatsapp_groups: {
+        Row: {
+          created_at: string
+          gender: string
+          grade: number
+          group_url: string
+          id: string
+          is_active: boolean
+          subject_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gender: string
+          grade: number
+          group_url: string
+          id?: string
+          is_active?: boolean
+          subject_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gender?: string
+          grade?: number
+          group_url?: string
+          id?: string
+          is_active?: boolean
+          subject_name?: string
+          updated_at?: string
         }
         Relationships: []
       }
