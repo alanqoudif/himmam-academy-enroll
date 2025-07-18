@@ -14,7 +14,7 @@ const Index = () => {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-primary rounded-full mb-6 shadow-strong">
-            <GraduationCap className="w-12 h-12 text-white" />
+            <img src="/lovable-uploads/801d1802-5d52-4277-93f7-6c0e16c27a79.png" alt="شعار أكاديمية همم التعليمية" className="w-12 h-12" />
           </div>
           <h1 className="text-5xl md:text-6xl font-bold text-accent mb-4">
             أكاديمية همم التعليمية
