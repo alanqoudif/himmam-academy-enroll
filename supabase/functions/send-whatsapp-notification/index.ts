@@ -63,20 +63,35 @@ serve(async (req) => {
       }
     }
 
+    // دالة لتنسيق رقم الهاتف (إضافة 968 إذا لم يكن موجوداً)
+    const formatPhoneNumber = (phone: string) => {
+      if (!phone) return '';
+      
+      // إزالة المسافات والرموز غير الضرورية
+      const cleanPhone = phone.replace(/\s+/g, '').replace(/[^\d]/g, '');
+      
+      // إذا كان الرقم يبدأ بـ 968 فلا نضيف شيء
+      if (cleanPhone.startsWith('968')) {
+        return cleanPhone;
+      }
+      
+      // إذا كان الرقم يبدأ بـ 8 أو 9 ولا يحتوي على 968 في البداية، نضيف 968
+      if (cleanPhone.startsWith('8') || cleanPhone.startsWith('9')) {
+        return '968' + cleanPhone;
+      }
+      
+      // إذا كان الرقم لا يبدأ بـ 968 أو 8 أو 9، نضيف 968 مباشرة
+      return '968' + cleanPhone;
+    };
+
     if (recipient_type === 'student') {
-      target_phone = phone_number || '';
-      // إزالة علامة + من الرقم إن وجدت
-      target_phone = target_phone.replace(/^\+/, '');
+      target_phone = formatPhoneNumber(phone_number);
       full_message = `مرحباً ${student_name || ''}،\n\n${message}${whatsappGroups}`;
     } else if (recipient_type === 'admin') {
-      target_phone = admin_phone_number;
-      // إزالة علامة + من الرقم إن وجدت
-      target_phone = target_phone.replace(/^\+/, '');
+      target_phone = formatPhoneNumber(admin_phone_number);
       full_message = message;
     } else if (recipient_type === 'teacher') {
-      target_phone = phone_number || '';
-      // إزالة علامة + من الرقم إن وجدت
-      target_phone = target_phone.replace(/^\+/, '');
+      target_phone = formatPhoneNumber(phone_number);
       full_message = `مرحباً ${student_name || ''}،\n\n${message}`;
     }
 

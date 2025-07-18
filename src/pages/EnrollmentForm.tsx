@@ -135,6 +135,25 @@ export default function EnrollmentForm() {
     return publicUrl;
   };
 
+  // دالة لتنسيق رقم الهاتف (إضافة 968 إذا لم يكن موجوداً)
+  const formatPhoneNumber = (phone: string) => {
+    // إزالة المسافات والرموز غير الضرورية
+    const cleanPhone = phone.replace(/\s+/g, '').replace(/[^\d]/g, '');
+    
+    // إذا كان الرقم يبدأ بـ 968 فلا نضيف شيء
+    if (cleanPhone.startsWith('968')) {
+      return cleanPhone;
+    }
+    
+    // إذا كان الرقم يبدأ بـ 8 أو 9 ولا يحتوي على 968 في البداية، نضيف 968
+    if (cleanPhone.startsWith('8') || cleanPhone.startsWith('9')) {
+      return '968' + cleanPhone;
+    }
+    
+    // إذا كان الرقم لا يبدأ بـ 968 أو 8 أو 9، نضيف 968 مباشرة
+    return '968' + cleanPhone;
+  };
+
   const sendWhatsAppNotification = async (type: 'student' | 'admin', message: string, studentName?: string, phoneNumber?: string) => {
     try {
       await supabase.functions.invoke('send-whatsapp-notification', {
@@ -181,10 +200,11 @@ export default function EnrollmentForm() {
       console.log('File uploaded successfully:', receiptUrl);
 
       // إنشاء التسجيل
+      const formattedPhone = formatPhoneNumber(formData.phone);
       const enrollmentData = {
         full_name: formData.fullName,
         email: formData.email,
-        phone: formData.phone,
+        phone: formattedPhone,
         grade: selectedGrade,
         selected_subjects: selectedSubjects,
         total_amount: calculateTotal(),
@@ -226,11 +246,11 @@ export default function EnrollmentForm() {
             'student',
             'تم استلام طلب التسجيل الخاص بك في أكاديمية همم التعليمية. سيتم مراجعة طلبك والرد عليك في أقرب وقت ممكن.',
             formData.fullName,
-            formData.phone
+            formattedPhone
           ),
           sendWhatsAppNotification(
             'admin',
-            `📚 طلب تسجيل جديد في أكاديمية همم\n\nاسم الطالب: ${formData.fullName}\nالإيميل: ${formData.email}\nالهاتف: ${formData.phone}\nالصف: ${selectedGrade}\nالمواد المختارة: ${selectedSubjects.join(', ')}\nإجمالي المبلغ: ${calculateTotal()} ريال عماني\n\nيرجى مراجعة الطلب في لوحة التحكم.`,
+            `📚 طلب تسجيل جديد في أكاديمية همم\n\nاسم الطالب: ${formData.fullName}\nالإيميل: ${formData.email}\nالهاتف: ${formattedPhone}\nالصف: ${selectedGrade}\nالمواد المختارة: ${selectedSubjects.join(', ')}\nإجمالي المبلغ: ${calculateTotal()} ريال عماني\n\nيرجى مراجعة الطلب في لوحة التحكم.`,
             formData.fullName,
             adminPhone
           )
@@ -341,8 +361,11 @@ export default function EnrollmentForm() {
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
                       required
                       className="mt-1"
-                      placeholder="96812345678"
+                      placeholder="71552969 أو 96871552969"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      سيتم إضافة رمز الدولة 968 تلقائياً إذا لم يكن موجوداً
+                    </p>
                   </div>
 
                   <div>
