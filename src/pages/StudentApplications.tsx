@@ -14,6 +14,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import * as XLSX from 'xlsx';
 
+// دالة آمنة لتحليل بيانات الاعتماد
+const safeParseCredentials = (credentialsString: string) => {
+  try {
+    return JSON.parse(credentialsString);
+  } catch (error) {
+    console.error('خطأ في تحليل بيانات الاعتماد:', error);
+    return null;
+  }
+};
+
 interface StudentApplication {
   id: string;
   full_name: string;
@@ -292,8 +302,8 @@ function StudentApplicationsContent() {
       'الحالة': app.status === 'approved' ? 'مقبول' : app.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة',
       'تاريخ التقديم': new Date(app.created_at).toLocaleDateString('ar-SA'),
       'سبب الرفض': app.rejection_reason || '',
-      'اسم المستخدم': app.access_credentials ? JSON.parse(app.access_credentials).username : '',
-      'كلمة المرور': app.access_credentials ? JSON.parse(app.access_credentials).password : ''
+      'اسم المستخدم': app.access_credentials ? (safeParseCredentials(app.access_credentials)?.username || '') : '',
+      'كلمة المرور': app.access_credentials ? (safeParseCredentials(app.access_credentials)?.password || '') : ''
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
@@ -637,7 +647,12 @@ function StudentApplicationsContent() {
                     <Label className="text-sm font-medium">بيانات الدخول</Label>
                     <div className="bg-green-50 border border-green-200 p-3 rounded">
                       {(() => {
-                        const credentials = JSON.parse(selectedAppDetails.access_credentials);
+                        const credentials = safeParseCredentials(selectedAppDetails.access_credentials);
+                        if (!credentials) {
+                          return (
+                            <p className="text-sm text-red-600">خطأ في قراءة بيانات الدخول</p>
+                          );
+                        }
                         return (
                           <div className="space-y-1">
                             <p><span className="font-medium">اسم المستخدم:</span> {credentials.username}</p>
@@ -706,12 +721,20 @@ function StudentApplicationsContent() {
                     <Button 
                       variant="outline"
                       onClick={() => {
-                        const credentials = JSON.parse(selectedAppDetails.access_credentials);
-                        navigator.clipboard.writeText(`اسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}`);
-                        toast({
-                          title: "تم النسخ",
-                          description: "تم نسخ بيانات الدخول للحافظة",
-                        });
+                        const credentials = safeParseCredentials(selectedAppDetails.access_credentials);
+                        if (credentials) {
+                          navigator.clipboard.writeText(`اسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}`);
+                          toast({
+                            title: "تم النسخ",
+                            description: "تم نسخ بيانات الدخول للحافظة",
+                          });
+                        } else {
+                          toast({
+                            title: "خطأ",
+                            description: "لا يمكن قراءة بيانات الدخول",
+                            variant: "destructive",
+                          });
+                        }
                       }}
                       size="sm"
                     >
@@ -884,12 +907,20 @@ function ApplicationGrid({
                     
                     {application.access_credentials && (
                       <DropdownMenuItem onClick={() => {
-                        const credentials = JSON.parse(application.access_credentials);
-                        navigator.clipboard.writeText(`اسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}`);
-                        toast({
-                          title: "تم النسخ",
-                          description: "تم نسخ بيانات الدخول للحافظة",
-                        });
+                        const credentials = safeParseCredentials(application.access_credentials);
+                        if (credentials) {
+                          navigator.clipboard.writeText(`اسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}`);
+                          toast({
+                            title: "تم النسخ",
+                            description: "تم نسخ بيانات الدخول للحافظة",
+                          });
+                        } else {
+                          toast({
+                            title: "خطأ",
+                            description: "لا يمكن قراءة بيانات الدخول",
+                            variant: "destructive",
+                          });
+                        }
                       }}>
                         <Download className="h-4 w-4 mr-2" />
                         نسخ بيانات الدخول
