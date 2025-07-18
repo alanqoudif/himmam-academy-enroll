@@ -12,7 +12,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import * as XLSX from 'xlsx';
 
 // دالة آمنة لتحليل بيانات الاعتماد
@@ -49,25 +48,12 @@ function StudentApplicationsContent() {
   const [loading, setLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState<StudentApplication | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
-  const [customRejectionReason, setCustomRejectionReason] = useState("");
   const [selectedAppDetails, setSelectedAppDetails] = useState<StudentApplication | null>(null);
   const [filterGrade, setFilterGrade] = useState<string>("all");
   const [filterGender, setFilterGender] = useState<string>("all");
   const [filterSubject, setFilterSubject] = useState<string>("all");
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
   const { toast } = useToast();
-
-  // أسباب الرفض المعدة مسبقاً
-  const predefinedReasons = [
-    "الصورة غير واضحة",
-    "البيانات غير مكتملة",
-    "إيصال الدفع غير صحيح",
-    "مشكلة في إثبات الضمان الاجتماعي",
-    "الصف الدراسي غير متاح",
-    "المادة غير متاحة في الوقت الحالي",
-    "عدم توفر الشروط المطلوبة",
-    "معلومات الاتصال غير صحيحة"
-  ];
 
   useEffect(() => {
     fetchApplications();
@@ -219,10 +205,7 @@ function StudentApplicationsContent() {
   };
 
   const rejectApplication = async (application: StudentApplication) => {
-    // تحديد الرسالة النهائية
-    const finalReason = rejectionReason === "custom" ? customRejectionReason : rejectionReason;
-    
-    if (!finalReason?.trim()) {
+    if (!rejectionReason.trim()) {
       toast({
         title: "خطأ",
         description: "يرجى إدخال سبب الرفض",
@@ -237,7 +220,7 @@ function StudentApplicationsContent() {
         .update({
           status: "rejected",
           reviewed_at: new Date().toISOString(),
-          rejection_reason: finalReason
+          rejection_reason: rejectionReason
         })
         .eq("id", application.id);
 
@@ -247,11 +230,10 @@ function StudentApplicationsContent() {
       try {
         await supabase.functions.invoke('send-whatsapp-notification', {
           body: {
-            message: `عذراً ${application.full_name},\n\nتم رفض طلب التسجيل في أكاديمية همم التعليمية.\n\nسبب الرفض: ${finalReason}\n\nيمكنك التواصل معنا لمزيد من التوضيح أو إعادة التقديم.`,
+            message: `عذراً ${application.full_name},\n\nتم رفض طلب التسجيل في أكاديمية همم التعليمية.\n\nسبب الرفض: ${rejectionReason}\n\nيمكنك التواصل معنا لمزيد من التوضيح أو إعادة التقديم.`,
             recipient_type: 'student',
             student_name: application.full_name,
-            phone_number: application.phone,
-            include_login_instructions: false
+            phone_number: application.phone
           }
         });
       } catch (whatsappError) {
@@ -260,12 +242,12 @@ function StudentApplicationsContent() {
 
       setApplications(applications.map(app => 
         app.id === application.id 
-          ? { ...app, status: "rejected", rejection_reason: finalReason }
+          ? { ...app, status: "rejected", rejection_reason: rejectionReason }
           : app
       ));
 
-      // إعادة تعيين الحقول
-      resetRejectionForm();
+      setSelectedApp(null);
+      setRejectionReason("");
 
       toast({
         title: "تم رفض الطلب",
@@ -280,13 +262,6 @@ function StudentApplicationsContent() {
         variant: "destructive",
       });
     }
-  };
-
-  // دالة لإعادة تعيين حقول الرفض
-  const resetRejectionForm = () => {
-    setSelectedApp(null);
-    setRejectionReason("");
-    setCustomRejectionReason("");
   };
 
   // إلغاء تفعيل حساب الطالب
@@ -558,79 +533,37 @@ function StudentApplicationsContent() {
         {/* نافذة رفض الطلب */}
         {selectedApp && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <Card className="w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto">
+            <Card className="w-full max-w-md mx-4">
               <CardHeader>
                 <CardTitle>رفض طلب {selectedApp.full_name}</CardTitle>
                 <CardDescription>
-                  يرجى اختيار سبب الرفض أو كتابة رسالة مخصصة
+                  يرجى إدخال سبب رفض الطلب
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">اختر سبب الرفض:</Label>
-                  
-                  <RadioGroup value={rejectionReason} onValueChange={setRejectionReason}>
-                    {predefinedReasons.map((reason) => (
-                      <div key={reason} className="flex items-center space-x-2 space-x-reverse">
-                        <RadioGroupItem value={reason} id={reason} />
-                        <Label htmlFor={reason} className="text-sm cursor-pointer">
-                          {reason}
-                        </Label>
-                      </div>
-                    ))}
-                    
-                    {/* خيار الرسالة المخصصة */}
-                    <div className="flex items-center space-x-2 space-x-reverse">
-                      <RadioGroupItem value="custom" id="custom" />
-                      <Label htmlFor="custom" className="text-sm cursor-pointer">
-                        رسالة مخصصة
-                      </Label>
-                    </div>
-                  </RadioGroup>
+                <div>
+                  <Label>سبب الرفض</Label>
+                  <Textarea
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    placeholder="أدخل سبب رفض الطلب..."
+                    rows={3}
+                  />
                 </div>
-
-                {/* مجال الرسالة المخصصة */}
-                {rejectionReason === "custom" && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">اكتب رسالة مخصصة:</Label>
-                    <Textarea
-                      value={customRejectionReason}
-                      onChange={(e) => setCustomRejectionReason(e.target.value)}
-                      placeholder="أدخل سبب الرفض المخصص..."
-                      rows={4}
-                      className="resize-none"
-                    />
-                  </div>
-                )}
-
-                {/* معاينة الرسالة التي ستُرسل */}
-                {rejectionReason && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-blue-600">معاينة الرسالة:</Label>
-                    <div className="bg-blue-50 border border-blue-200 p-3 rounded text-sm">
-                      <p className="font-medium">عذراً {selectedApp.full_name},</p>
-                      <p>تم رفض طلب التسجيل في أكاديمية همم التعليمية.</p>
-                      <p className="mt-2">
-                        <span className="font-medium">سبب الرفض:</span> {rejectionReason === "custom" ? customRejectionReason : rejectionReason}
-                      </p>
-                      <p className="mt-2">يمكنك التواصل معنا لمزيد من التوضيح أو إعادة التقديم.</p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex gap-2 pt-4">
+                <div className="flex gap-2">
                   <Button 
                     variant="destructive"
                     onClick={() => rejectApplication(selectedApp)}
                     className="flex-1"
-                    disabled={!rejectionReason || (rejectionReason === "custom" && !customRejectionReason?.trim())}
                   >
-                    <XCircle className="h-4 w-4 mr-1" />
-                    رفض الطلب وإرسال الرسالة
+                    رفض الطلب
                   </Button>
                   <Button 
                     variant="outline"
-                    onClick={resetRejectionForm}
+                    onClick={() => {
+                      setSelectedApp(null);
+                      setRejectionReason("");
+                    }}
                     className="flex-1"
                   >
                     إلغاء
