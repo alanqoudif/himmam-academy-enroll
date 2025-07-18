@@ -20,8 +20,7 @@ export default function PWAInstallPrompt() {
   useEffect(() => {
     // التحقق من تثبيت التطبيق
     const checkIfInstalled = () => {
-      if (window.matchMedia('(display-mode: standalone)').matches || 
-          (window.navigator as any).standalone === true) {
+      if (window.matchMedia('(display-mode: standalone)').matches) {
         setIsInstalled(true);
       }
     };
@@ -52,14 +51,6 @@ export default function PWAInstallPrompt() {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // للأجهزة المحمولة - إظهار الإشعار حتى لو لم يكن beforeinstallprompt متاح
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    if (isMobile && !isInstalled) {
-      setTimeout(() => {
-        setShowInstallPrompt(true);
-      }, 3000);
-    }
-
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
@@ -67,28 +58,16 @@ export default function PWAInstallPrompt() {
   }, [isInstalled]);
 
   const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        setShowInstallPrompt(false);
-      }
-      
-      setDeferredPrompt(null);
-    } else {
-      // للأجهزة المحمولة - إظهار تعليمات التثبيت
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      
-      if (isIOS) {
-        alert('لتثبيت التطبيق على iOS:\n1. اضغط على أيقونة المشاركة\n2. اختر "إضافة إلى الشاشة الرئيسية"');
-      } else if (isMobile) {
-        alert('لتثبيت التطبيق:\n1. اضغط على القائمة (⋮)\n2. اختر "إضافة إلى الشاشة الرئيسية"');
-      }
-      
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
       setShowInstallPrompt(false);
     }
+    
+    setDeferredPrompt(null);
   };
 
   const handleDismiss = () => {

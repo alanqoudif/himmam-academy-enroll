@@ -85,49 +85,42 @@ self.addEventListener('fetch', (event) => {
 
   // التعامل مع الطلبات العادية
   event.respondWith(
-    // تجاهل navigation requests للتطبيق نفسه
-    request.mode === 'navigate' ? 
-      fetch(request).catch(() => caches.match('/')) :
-      caches.match(request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
 
-        return fetch(request).then((response) => {
-          // تخزين الردود الناجحة
-          if (response.status === 200 && request.method === 'GET') {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone);
-            });
-          }
-          return response;
-        }).catch(() => {
-          // في حالة عدم وجود اتصال
-          if (request.destination === 'document') {
-            return caches.match('/');
-          }
-          return new Response('Offline content not available', {
-            status: 503,
-            statusText: 'Service Unavailable'
+      return fetch(request).then((response) => {
+        // تخزين الردود الناجحة
+        if (response.status === 200 && request.method === 'GET') {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseClone);
           });
+        }
+        return response;
+      }).catch(() => {
+        // في حالة عدم وجود اتصال
+        if (request.destination === 'document') {
+          return caches.match('/');
+        }
+        return new Response('Offline content not available', {
+          status: 503,
+          statusText: 'Service Unavailable'
         });
-      })
+      });
+    })
   );
 });
 
 // رسائل من التطبيق
 self.addEventListener('message', (event) => {
-  console.log('SW received message:', event.data);
-  
   if (event.data && event.data.type === 'CACHE_LESSON') {
     const { lessonData } = event.data;
-    console.log('Caching lesson:', lessonData.title);
     cacheLesson(lessonData);
   }
   
   if (event.data && event.data.type === 'GET_CACHED_LESSONS') {
-    console.log('Getting cached lessons');
     getCachedLessons().then((lessons) => {
       event.ports[0].postMessage({ lessons });
     });
@@ -136,8 +129,6 @@ self.addEventListener('message', (event) => {
 
 // تخزين درس للاستخدام offline
 async function cacheLesson(lessonData) {
-  let success = false;
-  
   try {
     const cache = await caches.open(OFFLINE_CACHE);
     
@@ -146,17 +137,14 @@ async function cacheLesson(lessonData) {
       headers: { 'Content-Type': 'application/json' }
     });
     await cache.put(`lesson-${lessonData.id}`, lessonResponse);
-    console.log('Lesson data cached successfully');
 
     // تخزين الفيديو إذا كان موجوداً
     if (lessonData.video_url && !lessonData.video_url.includes('youtube')) {
       try {
-        console.log('Caching video:', lessonData.video_url);
         const videoResponse = await fetch(lessonData.video_url);
         if (videoResponse.ok) {
           const videoCache = await caches.open(VIDEO_CACHE);
-          await videoCache.put(lessonData.video_url, videoResponse.clone());
-          console.log('Video cached successfully');
+          await videoCache.put(lessonData.video_url, videoResponse);
         }
       } catch (error) {
         console.log('Failed to cache video:', error);
@@ -166,11 +154,10 @@ async function cacheLesson(lessonData) {
     // تخزين PDF إذا كان موجوداً
     if (lessonData.pdf_url) {
       try {
-        console.log('Caching PDF:', lessonData.pdf_url);
         const pdfResponse = await fetch(lessonData.pdf_url);
         if (pdfResponse.ok) {
-          await cache.put(lessonData.pdf_url, pdfResponse.clone());
-          console.log('PDF cached successfully');
+          const offlineCache = await caches.open(OFFLINE_CACHE);
+          await offlineCache.put(lessonData.pdf_url, pdfResponse);
         }
       } catch (error) {
         console.log('Failed to cache PDF:', error);
@@ -181,11 +168,10 @@ async function cacheLesson(lessonData) {
     if (lessonData.materials && lessonData.materials.length > 0) {
       for (const materialUrl of lessonData.materials) {
         try {
-          console.log('Caching material:', materialUrl);
           const materialResponse = await fetch(materialUrl);
           if (materialResponse.ok) {
-            await cache.put(materialUrl, materialResponse.clone());
-            console.log('Material cached successfully');
+            const offlineCache = await caches.open(OFFLINE_CACHE);
+            await offlineCache.put(materialUrl, materialResponse);
           }
         } catch (error) {
           console.log('Failed to cache material:', error);
@@ -193,24 +179,18 @@ async function cacheLesson(lessonData) {
       }
     }
 
-    success = true;
-    console.log('All lesson content cached successfully');
-  } catch (error) {
-    console.error('Error caching lesson:', error);
-  }
-
-  // إشعار النجاح أو الفشل
-  try {
-    const clients = await self.clients.matchAll();
-    clients.forEach((client) => {
-      client.postMessage({
-        type: 'LESSON_CACHED',
-        lessonId: lessonData.id,
-        success: success
+    // إشعار النجاح
+    self.clients.matchAll().then((clients) => {
+      clients.forEach((client) => {
+        client.postMessage({
+          type: 'LESSON_CACHED',
+          lessonId: lessonData.id,
+          success: true
+        });
       });
     });
   } catch (error) {
-    console.error('Error sending message to clients:', error);
+    console.error('Error caching lesson:', error);
   }
 }
 

@@ -73,77 +73,53 @@ export default function OfflineDownloadManager({ lessons, onOfflineLesson }: Off
       return;
     }
 
-    if (!navigator.serviceWorker.controller) {
-      toast({
-        title: 'خطأ',
-        description: 'Service Worker غير جاهز. يرجى إعادة تحميل الصفحة.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    console.log('Starting download for lesson:', lesson.title);
     setDownloadingLessons(prev => new Set([...prev, lesson.id]));
 
     try {
       // إرسال البيانات للـ Service Worker
-      navigator.serviceWorker.controller.postMessage({
-        type: 'CACHE_LESSON',
-        lessonData: lesson
-      });
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'CACHE_LESSON',
+          lessonData: lesson
+        });
 
-      console.log('Message sent to service worker');
-
-      // انتظار تأكيد النجاح
-      const handleMessage = (event: MessageEvent) => {
-        console.log('Received message from SW:', event.data);
-        
-        if (event.data.type === 'LESSON_CACHED' && event.data.lessonId === lesson.id) {
-          if (event.data.success) {
-            setCachedLessons(prev => new Set([...prev, lesson.id]));
-            toast({
-              title: 'تم التحميل بنجاح',
-              description: `تم تحميل درس "${lesson.title}" للاستخدام بدون انترنت`,
+        // انتظار تأكيد النجاح
+        const handleMessage = (event: MessageEvent) => {
+          if (event.data.type === 'LESSON_CACHED' && event.data.lessonId === lesson.id) {
+            if (event.data.success) {
+              setCachedLessons(prev => new Set([...prev, lesson.id]));
+              toast({
+                title: 'تم التحميل بنجاح',
+                description: `تم تحميل درس "${lesson.title}" للاستخدام بدون انترنت`,
+              });
+            } else {
+              toast({
+                title: 'فشل التحميل',
+                description: 'حدث خطأ أثناء تحميل الدرس',
+                variant: 'destructive'
+              });
+            }
+            setDownloadingLessons(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(lesson.id);
+              return newSet;
             });
-            console.log('Lesson cached successfully');
-          } else {
-            toast({
-              title: 'فشل التحميل',
-              description: 'حدث خطأ أثناء تحميل الدرس',
-              variant: 'destructive'
-            });
-            console.log('Lesson caching failed');
+            navigator.serviceWorker.removeEventListener('message', handleMessage);
           }
+        };
+
+        navigator.serviceWorker.addEventListener('message', handleMessage);
+
+        // مهلة زمنية للتحميل
+        setTimeout(() => {
           setDownloadingLessons(prev => {
             const newSet = new Set(prev);
             newSet.delete(lesson.id);
             return newSet;
           });
           navigator.serviceWorker.removeEventListener('message', handleMessage);
-        }
-      };
-
-      navigator.serviceWorker.addEventListener('message', handleMessage);
-
-      // مهلة زمنية للتحميل
-      setTimeout(() => {
-        console.log('Download timeout reached');
-        setDownloadingLessons(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(lesson.id);
-          return newSet;
-        });
-        navigator.serviceWorker.removeEventListener('message', handleMessage);
-        
-        if (downloadingLessons.has(lesson.id)) {
-          toast({
-            title: 'انتهت المهلة الزمنية',
-            description: 'يرجى المحاولة مرة أخرى',
-            variant: 'destructive'
-          });
-        }
-      }, 30000); // 30 ثانية
-
+        }, 30000); // 30 ثانية
+      }
     } catch (error) {
       console.error('Error downloading lesson:', error);
       toast({
