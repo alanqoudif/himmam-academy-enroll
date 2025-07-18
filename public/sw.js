@@ -63,6 +63,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // تخزين الملفات والمواد التعليمية
+  if (request.url.includes('.pdf') || request.url.includes('.doc') || request.url.includes('.ppt') || request.url.includes('.xlsx') || request.url.includes('/storage/')) {
+    event.respondWith(
+      caches.open(OFFLINE_CACHE).then((cache) => {
+        return cache.match(request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          return fetch(request).then((response) => {
+            if (response.status === 200) {
+              cache.put(request, response.clone());
+            }
+            return response;
+          });
+        });
+      })
+    );
+    return;
+  }
+
   // التعامل مع الطلبات العادية
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
@@ -128,6 +148,34 @@ async function cacheLesson(lessonData) {
         }
       } catch (error) {
         console.log('Failed to cache video:', error);
+      }
+    }
+
+    // تخزين PDF إذا كان موجوداً
+    if (lessonData.pdf_url) {
+      try {
+        const pdfResponse = await fetch(lessonData.pdf_url);
+        if (pdfResponse.ok) {
+          const offlineCache = await caches.open(OFFLINE_CACHE);
+          await offlineCache.put(lessonData.pdf_url, pdfResponse);
+        }
+      } catch (error) {
+        console.log('Failed to cache PDF:', error);
+      }
+    }
+
+    // تخزين المواد الإضافية
+    if (lessonData.materials && lessonData.materials.length > 0) {
+      for (const materialUrl of lessonData.materials) {
+        try {
+          const materialResponse = await fetch(materialUrl);
+          if (materialResponse.ok) {
+            const offlineCache = await caches.open(OFFLINE_CACHE);
+            await offlineCache.put(materialUrl, materialResponse);
+          }
+        } catch (error) {
+          console.log('Failed to cache material:', error);
+        }
       }
     }
 

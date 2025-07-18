@@ -15,6 +15,7 @@ interface Lesson {
   pdf_url?: string;
   content_type: string;
   duration_minutes?: number;
+  materials?: string[];
 }
 
 interface OfflineDownloadManagerProps {
@@ -181,7 +182,7 @@ export default function OfflineDownloadManager({ lessons, onOfflineLesson }: Off
           {lessons.map((lesson) => {
             const isDownloading = downloadingLessons.has(lesson.id);
             const isCached = cachedLessons.has(lesson.id);
-            const canDownload = lesson.content_type === 'video' && lesson.video_url && !lesson.video_url.includes('youtube');
+            const canDownload = (lesson.video_url && !lesson.video_url.includes('youtube')) || lesson.pdf_url || (lesson.materials && lesson.materials.length > 0);
             
             return (
               <div key={lesson.id} className="flex items-center justify-between p-3 border rounded-lg">
@@ -246,7 +247,7 @@ export default function OfflineDownloadManager({ lessons, onOfflineLesson }: Off
           })}
         </div>
         
-        {lessons.filter(l => l.content_type === 'video' && l.video_url && !l.video_url.includes('youtube')).length === 0 && (
+        {lessons.filter(l => (l.video_url && !l.video_url.includes('youtube')) || l.pdf_url || (l.materials && l.materials.length > 0)).length === 0 && (
           <p className="text-center text-muted-foreground py-4">
             لا توجد دروس قابلة للتحميل حالياً
           </p>
