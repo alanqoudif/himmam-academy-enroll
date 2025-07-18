@@ -85,31 +85,34 @@ self.addEventListener('fetch', (event) => {
 
   // التعامل مع الطلبات العادية
   event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+    // تجاهل navigation requests للتطبيق نفسه
+    request.mode === 'navigate' ? 
+      fetch(request).catch(() => caches.match('/')) :
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
 
-      return fetch(request).then((response) => {
-        // تخزين الردود الناجحة
-        if (response.status === 200 && request.method === 'GET') {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
+        return fetch(request).then((response) => {
+          // تخزين الردود الناجحة
+          if (response.status === 200 && request.method === 'GET') {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseClone);
+            });
+          }
+          return response;
+        }).catch(() => {
+          // في حالة عدم وجود اتصال
+          if (request.destination === 'document') {
+            return caches.match('/');
+          }
+          return new Response('Offline content not available', {
+            status: 503,
+            statusText: 'Service Unavailable'
           });
-        }
-        return response;
-      }).catch(() => {
-        // في حالة عدم وجود اتصال
-        if (request.destination === 'document') {
-          return caches.match('/');
-        }
-        return new Response('Offline content not available', {
-          status: 503,
-          statusText: 'Service Unavailable'
         });
-      });
-    })
+      })
   );
 });
 
