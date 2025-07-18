@@ -81,7 +81,7 @@ const Index = () => {
             <Card className="shadow-medium border-0 relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-primary"></div>
               <CardHeader className="text-center pt-8">
-                <CardTitle className="text-2xl text-accent">الصفوف 5-8</CardTitle>
+                <CardTitle className="text-2xl text-accent">الصفوف 5-9</CardTitle>
                 <div className="text-4xl font-bold text-academy-orange my-4">15 ر.ع</div>
                 <p className="text-muted-foreground">للمادة الواحدة</p>
               </CardHeader>
