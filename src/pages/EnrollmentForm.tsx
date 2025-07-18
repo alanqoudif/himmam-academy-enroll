@@ -94,7 +94,19 @@ export default function EnrollmentForm() {
   const calculateTotal = () => {
     return availableSubjects
       .filter(subject => selectedSubjects.includes(subject.subject_name))
-      .reduce((total, subject) => total + subject.price_per_subject, 0);
+      .reduce((total, subject) => {
+        let price = subject.price_per_subject;
+        
+        // تطبيق خصم الضمان الاجتماعي للصفوف 10-12
+        if (isSocialSecurityEligible && selectedGrade && selectedGrade >= 10 && selectedGrade <= 12) {
+          // إذا كان السعر 25 ريال عماني، يصبح 15 ريال عماني
+          if (price === 25) {
+            price = 15;
+          }
+        }
+        
+        return total + price;
+      }, 0);
   };
 
   const handleSubjectChange = (subjectName: string, checked: boolean) => {
@@ -461,7 +473,12 @@ export default function EnrollmentForm() {
                     <div>
                       <Label>المواد المطلوبة *</Label>
                       <div className="mt-2 space-y-3 max-h-48 overflow-y-auto">
-                        {availableSubjects.map(subject => (
+                      {availableSubjects.map(subject => {
+                        const originalPrice = subject.price_per_subject;
+                        const hasDiscount = isSocialSecurityEligible && selectedGrade && selectedGrade >= 10 && selectedGrade <= 12 && originalPrice === 25;
+                        const discountedPrice = hasDiscount ? 15 : originalPrice;
+                        
+                        return (
                           <div key={subject.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                             <div className="flex items-center space-x-3">
                               <Checkbox
@@ -475,11 +492,19 @@ export default function EnrollmentForm() {
                                 {subject.subject_name}
                               </Label>
                             </div>
-                            <span className="text-sm font-medium text-primary">
-                              {subject.price_per_subject} ر.ع
-                            </span>
+                            <div className="text-sm font-medium text-primary">
+                              {hasDiscount ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="line-through text-muted-foreground">{originalPrice} ر.ع</span>
+                                  <span className="text-green-600 font-bold">{discountedPrice} ر.ع</span>
+                                </div>
+                              ) : (
+                                <span>{originalPrice} ر.ع</span>
+                              )}
+                            </div>
                           </div>
-                        ))}
+                        );
+                      })}
                       </div>
                     </div>
                   )}
@@ -511,6 +536,14 @@ export default function EnrollmentForm() {
                       هل أنت من المستفيدين من الضمان الاجتماعي؟
                     </Label>
                   </div>
+                  
+                  {selectedGrade && selectedGrade >= 10 && selectedGrade <= 12 && (
+                    <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
+                      <p className="text-sm text-green-800">
+                        <span className="font-semibold">خصم خاص للضمان الاجتماعي:</span> للصفوف 10-12، سعر المادة يصبح 15 ريال عماني بدلاً من 25 ريال عماني
+                      </p>
+                    </div>
+                  )}
 
                   {isSocialSecurityEligible && (
                     <div>
