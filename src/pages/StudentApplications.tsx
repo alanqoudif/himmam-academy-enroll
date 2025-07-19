@@ -14,6 +14,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import * as XLSX from 'xlsx';
 
+// دالة آمنة لتحليل بيانات الاعتماد
+const safeParseCredentials = (credentialsString: string) => {
+  try {
+    return JSON.parse(credentialsString);
+  } catch (error) {
+    console.error('خطأ في تحليل بيانات الاعتماد:', error);
+    return null;
+  }
+};
+
 interface StudentApplication {
   id: string;
   full_name: string;
@@ -28,6 +38,8 @@ interface StudentApplication {
   access_credentials?: string;
   bank_transfer_details?: string;
   gender?: string;
+  social_security_eligible?: boolean;
+  social_security_proof_url?: string;
   created_at: string;
 }
 
@@ -80,12 +92,25 @@ function StudentApplicationsContent() {
   const generateStudentCredentials = (fullName: string) => {
     const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     
-    // إنشاء كلمة مرور قوية بناء على اسم الطالب
-    const nameWords = fullName.trim().split(' ');
-    const firstName = nameWords[0] || 'Student';
-    const lastName = nameWords[nameWords.length - 1] || '';
+    // تحويل الأسماء العربية إلى حروف إنجليزية
+    const arabicToEnglish: { [key: string]: string } = {
+      'أ': 'A', 'ا': 'A', 'إ': 'A', 'آ': 'A',
+      'ب': 'B', 'ت': 'T', 'ث': 'TH', 'ج': 'J', 'ح': 'H', 'خ': 'KH',
+      'د': 'D', 'ذ': 'TH', 'ر': 'R', 'ز': 'Z', 'س': 'S', 'ش': 'SH',
+      'ص': 'S', 'ض': 'D', 'ط': 'T', 'ظ': 'Z', 'ع': 'A', 'غ': 'GH',
+      'ف': 'F', 'ق': 'Q', 'ك': 'K', 'ل': 'L', 'م': 'M', 'ن': 'N',
+      'ه': 'H', 'و': 'W', 'ي': 'Y', 'ى': 'Y', 'ة': 'H'
+    };
     
-    // إنشاء كلمة مرور تحتوي على اسم الطالب ورقم عشوائي
+    const convertArabicToEnglish = (text: string) => {
+      return text.split('').map(char => arabicToEnglish[char] || char).join('');
+    };
+    
+    const nameWords = fullName.trim().split(' ');
+    const firstName = convertArabicToEnglish(nameWords[0] || 'Student');
+    const lastName = nameWords.length > 1 ? convertArabicToEnglish(nameWords[nameWords.length - 1]) : '';
+    
+    // إنشاء كلمة مرور باللغة الإنجليزية
     const passwordBase = firstName + (lastName ? lastName.charAt(0).toUpperCase() : '') + randomNum;
     
     return {
@@ -277,8 +302,8 @@ function StudentApplicationsContent() {
       'الحالة': app.status === 'approved' ? 'مقبول' : app.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة',
       'تاريخ التقديم': new Date(app.created_at).toLocaleDateString('ar-SA'),
       'سبب الرفض': app.rejection_reason || '',
-      'اسم المستخدم': app.access_credentials ? JSON.parse(app.access_credentials).username : '',
-      'كلمة المرور': app.access_credentials ? JSON.parse(app.access_credentials).password : ''
+      'اسم المستخدم': app.access_credentials ? (safeParseCredentials(app.access_credentials)?.username || '') : '',
+      'كلمة المرور': app.access_credentials ? (safeParseCredentials(app.access_credentials)?.password || '') : ''
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
@@ -622,7 +647,12 @@ function StudentApplicationsContent() {
                     <Label className="text-sm font-medium">بيانات الدخول</Label>
                     <div className="bg-green-50 border border-green-200 p-3 rounded">
                       {(() => {
-                        const credentials = JSON.parse(selectedAppDetails.access_credentials);
+                        const credentials = safeParseCredentials(selectedAppDetails.access_credentials);
+                        if (!credentials) {
+                          return (
+                            <p className="text-sm text-red-600">خطأ في قراءة بيانات الدخول</p>
+                          );
+                        }
                         return (
                           <div className="space-y-1">
                             <p><span className="font-medium">اسم المستخدم:</span> {credentials.username}</p>
@@ -630,6 +660,28 @@ function StudentApplicationsContent() {
                           </div>
                         );
                       })()}
+                    </div>
+                  </div>
+                )}
+
+                {/* معلومات الضمان الاجتماعي */}
+                {selectedAppDetails.social_security_eligible && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">الضمان الاجتماعي</Label>
+                    <div className="bg-blue-50 border border-blue-200 p-3 rounded">
+                      <p className="text-sm text-blue-800 mb-2">
+                        <span className="font-medium">مستفيد من الضمان الاجتماعي:</span> نعم
+                      </p>
+                      {selectedAppDetails.social_security_proof_url && (
+                        <Button 
+                          variant="outline" 
+                          onClick={() => window.open(selectedAppDetails.social_security_proof_url, '_blank')}
+                          size="sm"
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          عرض إثبات الضمان الاجتماعي
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -669,12 +721,20 @@ function StudentApplicationsContent() {
                     <Button 
                       variant="outline"
                       onClick={() => {
-                        const credentials = JSON.parse(selectedAppDetails.access_credentials);
-                        navigator.clipboard.writeText(`اسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}`);
-                        toast({
-                          title: "تم النسخ",
-                          description: "تم نسخ بيانات الدخول للحافظة",
-                        });
+                        const credentials = safeParseCredentials(selectedAppDetails.access_credentials);
+                        if (credentials) {
+                          navigator.clipboard.writeText(`اسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}`);
+                          toast({
+                            title: "تم النسخ",
+                            description: "تم نسخ بيانات الدخول للحافظة",
+                          });
+                        } else {
+                          toast({
+                            title: "خطأ",
+                            description: "لا يمكن قراءة بيانات الدخول",
+                            variant: "destructive",
+                          });
+                        }
                       }}
                       size="sm"
                     >
@@ -847,12 +907,20 @@ function ApplicationGrid({
                     
                     {application.access_credentials && (
                       <DropdownMenuItem onClick={() => {
-                        const credentials = JSON.parse(application.access_credentials);
-                        navigator.clipboard.writeText(`اسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}`);
-                        toast({
-                          title: "تم النسخ",
-                          description: "تم نسخ بيانات الدخول للحافظة",
-                        });
+                        const credentials = safeParseCredentials(application.access_credentials);
+                        if (credentials) {
+                          navigator.clipboard.writeText(`اسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}`);
+                          toast({
+                            title: "تم النسخ",
+                            description: "تم نسخ بيانات الدخول للحافظة",
+                          });
+                        } else {
+                          toast({
+                            title: "خطأ",
+                            description: "لا يمكن قراءة بيانات الدخول",
+                            variant: "destructive",
+                          });
+                        }
                       }}>
                         <Download className="h-4 w-4 mr-2" />
                         نسخ بيانات الدخول
