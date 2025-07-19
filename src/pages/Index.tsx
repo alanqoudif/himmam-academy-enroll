@@ -1,93 +1,11 @@
-
-import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCap, BookOpen, Users, Award, ArrowLeft } from "lucide-react";
 import Header from "@/components/Header";
-
-// Fallback navigation function
-const navigateToPage = (path: string) => {
-  try {
-    window.location.href = path;
-  } catch (error) {
-    console.error('Navigation error:', error);
-  }
-};
-
 const Index = () => {
   const navigate = useNavigate();
-
-  // Safe navigation function
-  const safeNavigate = (path: string) => {
-    try {
-      navigate(path);
-    } catch (error) {
-      console.error('useNavigate error:', error);
-      navigateToPage(path);
-    }
-  };
-
-  useEffect(() => {
-    // Add structured data for SEO
-    const structuredData = {
-      "@context": "https://schema.org",
-      "@type": "EducationalOrganization",
-      "name": "أكاديمية همم التعليمية",
-      "alternateName": "Himam Education Academy",
-      "url": "https://cms.himamedu.com",
-      "logo": "https://cms.himamedu.com/lovable-uploads/c094d831-e1c3-47c5-ba14-1726d2bdb929.png",
-      "image": "https://cms.himamedu.com/lovable-uploads/c094d831-e1c3-47c5-ba14-1726d2bdb929.png",
-      "description": "منصة تعليمية متميزة تهدف إلى تطوير قدرات الطلاب وتحقيق التفوق الأكاديمي من خلال أساليب تعليمية حديثة ومبتكرة",
-      "address": {
-        "@type": "PostalAddress",
-        "addressCountry": "OM"
-      },
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "contactType": "customer service",
-        "availableLanguage": ["ar", "en"]
-      },
-      "sameAs": [
-        "https://cms.himamedu.com"
-      ],
-      "offers": [
-        {
-          "@type": "Offer",
-          "name": "الصفوف 5-9",
-          "price": "15",
-          "priceCurrency": "OMR",
-          "description": "للمادة الواحدة"
-        },
-        {
-          "@type": "Offer", 
-          "name": "الصفوف 10-11",
-          "price": "25",
-          "priceCurrency": "OMR",
-          "description": "للمادة الواحدة"
-        },
-        {
-          "@type": "Offer",
-          "name": "الصف 12", 
-          "price": "25",
-          "priceCurrency": "OMR",
-          "description": "للمادة الواحدة"
-        }
-      ]
-    };
-
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.text = JSON.stringify(structuredData);
-    document.head.appendChild(script);
-
-    return () => {
-      document.head.removeChild(script);
-    };
-  }, []);
-
-  return (
-    <div className="min-h-screen bg-gradient-accent font-arabic" dir="rtl">
+  return <div className="min-h-screen bg-gradient-accent font-arabic" dir="rtl">
       <Header />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
@@ -102,43 +20,12 @@ const Index = () => {
             منصة تعليمية متميزة تهدف إلى تطوير قدرات الطلاب وتحقيق التفوق الأكاديمي من خلال أساليب تعليمية حديثة ومبتكرة
           </p>
           
-          {/* Internal Navigation Links */}
-          <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <Button
-              onClick={() => safeNavigate('/about')}
-              variant="outline"
-              className="text-accent border-accent hover:bg-accent hover:text-white"
-            >
-              من نحن
-            </Button>
-            <Button
-              onClick={() => safeNavigate('/pricing')}
-              variant="outline"
-              className="text-accent border-accent hover:bg-accent hover:text-white"
-            >
-              الأسعار
-            </Button>
-            <Button
-              onClick={() => safeNavigate('/grades')}
-              variant="outline"
-              className="text-accent border-accent hover:bg-accent hover:text-white"
-            >
-              الصفوف الدراسية
-            </Button>
-            <Button
-              onClick={() => safeNavigate('/contact')}
-              variant="outline"
-              className="text-accent border-accent hover:bg-accent hover:text-white"
-            >
-              تواصل معنا
-            </Button>
-          </div>
-          
           <div className="flex justify-center">
-            <Button onClick={() => safeNavigate('/enroll')} size="lg" className="bg-gradient-primary hover:opacity-90 text-white font-semibold px-8 py-4 text-lg shadow-medium">
+            <Button onClick={() => navigate('/enroll')} size="lg" className="bg-gradient-primary hover:opacity-90 text-white font-semibold px-8 py-4 text-lg shadow-medium">
               <BookOpen className="w-6 h-6 mr-2" />
               سجل الآن
             </Button>
+            
           </div>
         </div>
 
@@ -280,14 +167,12 @@ const Index = () => {
           <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
             انضم إلى آلاف الطلاب الذين اختاروا أكاديمية همم لتحقيق أهدافهم الأكاديمية
           </p>
-          <Button onClick={() => safeNavigate('/enroll')} size="lg" variant="secondary" className="bg-white text-academy-orange hover:bg-white/90 font-semibold text-lg shadow-medium px-0 py-0">
+          <Button onClick={() => navigate('/enroll')} size="lg" variant="secondary" className="bg-white text-academy-orange hover:bg-white/90 font-semibold text-lg shadow-medium px-0 py-0">
             <BookOpen className="w-6 h-6 mr-2" />
             سجل الآن واحصل على خصم خاص
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;

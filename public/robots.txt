@@ -1,17 +1,3 @@
-User-agent: *
-Allow: /
-
-# Sitemap
-Sitemap: https://cms.himamedu.com/sitemap.xml
-
-# Disallow admin and private areas
-Disallow: /admin
-Disallow: /teacher-dashboard
-Disallow: /student-dashboard
-Disallow: /teacher-management
-Disallow: /student-applications
-
-# Allow specific crawlers
 User-agent: Googlebot
 Allow: /
 
@@ -22,4 +8,7 @@ User-agent: Twitterbot
 Allow: /
 
 User-agent: facebookexternalhit
+Allow: /
+
+User-agent: *
 Allow: /

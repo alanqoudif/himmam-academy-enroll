@@ -208,8 +208,7 @@ export default function EnrollmentForm() {
           recipient_type: type,
           student_name: studentName,
           phone_number: phoneNumber,
-          admin_phone: phoneNumber, // استخدام الرقم الممرر
-          include_login_instructions: false // لا نرسل تعليمات الدخول في رسالة الاستلام
+          admin_phone: phoneNumber // استخدام الرقم الممرر
         }
       });
     } catch (error) {
