@@ -346,6 +346,8 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           selected_subjects: string[]
+          social_security_eligible: boolean | null
+          social_security_proof_url: string | null
           status: string
           total_amount: number
           updated_at: string
@@ -365,6 +367,8 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           selected_subjects: string[]
+          social_security_eligible?: boolean | null
+          social_security_proof_url?: string | null
           status?: string
           total_amount: number
           updated_at?: string
@@ -384,6 +388,8 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           selected_subjects?: string[]
+          social_security_eligible?: boolean | null
+          social_security_proof_url?: string | null
           status?: string
           total_amount?: number
           updated_at?: string
