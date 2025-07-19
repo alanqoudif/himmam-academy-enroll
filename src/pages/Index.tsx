@@ -1,11 +1,32 @@
+
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCap, BookOpen, Users, Award, ArrowLeft } from "lucide-react";
 import Header from "@/components/Header";
-import { useEffect } from "react";
+
+// Fallback navigation function
+const navigateToPage = (path: string) => {
+  try {
+    window.location.href = path;
+  } catch (error) {
+    console.error('Navigation error:', error);
+  }
+};
+
 const Index = () => {
   const navigate = useNavigate();
+
+  // Safe navigation function
+  const safeNavigate = (path: string) => {
+    try {
+      navigate(path);
+    } catch (error) {
+      console.error('useNavigate error:', error);
+      navigateToPage(path);
+    }
+  };
 
   useEffect(() => {
     // Add structured data for SEO
@@ -65,7 +86,8 @@ const Index = () => {
     };
   }, []);
 
-  return <div className="min-h-screen bg-gradient-accent font-arabic" dir="rtl">
+  return (
+    <div className="min-h-screen bg-gradient-accent font-arabic" dir="rtl">
       <Header />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
@@ -83,28 +105,28 @@ const Index = () => {
           {/* Internal Navigation Links */}
           <div className="flex flex-wrap justify-center gap-4 mb-8">
             <Button
-              onClick={() => navigate('/about')}
+              onClick={() => safeNavigate('/about')}
               variant="outline"
               className="text-accent border-accent hover:bg-accent hover:text-white"
             >
               من نحن
             </Button>
             <Button
-              onClick={() => navigate('/pricing')}
+              onClick={() => safeNavigate('/pricing')}
               variant="outline"
               className="text-accent border-accent hover:bg-accent hover:text-white"
             >
               الأسعار
             </Button>
             <Button
-              onClick={() => navigate('/grades')}
+              onClick={() => safeNavigate('/grades')}
               variant="outline"
               className="text-accent border-accent hover:bg-accent hover:text-white"
             >
               الصفوف الدراسية
             </Button>
             <Button
-              onClick={() => navigate('/contact')}
+              onClick={() => safeNavigate('/contact')}
               variant="outline"
               className="text-accent border-accent hover:bg-accent hover:text-white"
             >
@@ -113,11 +135,10 @@ const Index = () => {
           </div>
           
           <div className="flex justify-center">
-            <Button onClick={() => navigate('/enroll')} size="lg" className="bg-gradient-primary hover:opacity-90 text-white font-semibold px-8 py-4 text-lg shadow-medium">
+            <Button onClick={() => safeNavigate('/enroll')} size="lg" className="bg-gradient-primary hover:opacity-90 text-white font-semibold px-8 py-4 text-lg shadow-medium">
               <BookOpen className="w-6 h-6 mr-2" />
               سجل الآن
             </Button>
-            
           </div>
         </div>
 
@@ -259,12 +280,14 @@ const Index = () => {
           <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
             انضم إلى آلاف الطلاب الذين اختاروا أكاديمية همم لتحقيق أهدافهم الأكاديمية
           </p>
-          <Button onClick={() => navigate('/enroll')} size="lg" variant="secondary" className="bg-white text-academy-orange hover:bg-white/90 font-semibold text-lg shadow-medium px-0 py-0">
+          <Button onClick={() => safeNavigate('/enroll')} size="lg" variant="secondary" className="bg-white text-academy-orange hover:bg-white/90 font-semibold text-lg shadow-medium px-0 py-0">
             <BookOpen className="w-6 h-6 mr-2" />
             سجل الآن واحصل على خصم خاص
           </Button>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Index;

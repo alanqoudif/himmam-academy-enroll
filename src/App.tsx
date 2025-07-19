@@ -1,5 +1,5 @@
 
-import * as React from "react";
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -37,7 +37,47 @@ const queryClient = new QueryClient({
   },
 });
 
-// Error boundary for query errors
+// Router Error Boundary
+class RouterErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error('Router Error:', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center p-8">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">خطأ في التنقل</h2>
+            <p className="text-gray-600 mb-4">يرجى إعادة تحميل الصفحة</p>
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              onClick={() => window.location.reload()}
+            >
+              إعادة المحاولة
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// Query Error boundary
 class QueryErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { hasError: boolean; error?: Error }
@@ -84,61 +124,63 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <QueryErrorBoundary>
         <BrowserRouter>
-          <div className="min-h-screen bg-background">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/enroll" element={<EnrollmentForm />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/grades" element={<Grades />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/change-password" element={<ChangePassword />} />
-              <Route 
-                path="/teacher-dashboard" 
-                element={
-                  <AuthGuard allowedRoles={['teacher']}>
-                    <TeacherDashboard />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/student-dashboard" 
-                element={
-                  <AuthGuard allowedRoles={['student']}>
-                    <StudentDashboard />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/teacher-management" 
-                element={
-                  <AuthGuard allowedRoles={['admin']}>
-                    <TeacherManagement />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/student-applications" 
-                element={
-                  <AuthGuard allowedRoles={['admin']}>
-                    <StudentApplications />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/admin" 
-                element={
-                  <AuthGuard allowedRoles={['admin']}>
-                    <AdminDashboard />
-                  </AuthGuard>
-                } 
-              />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-          <Toaster />
-          <Sonner />
+          <RouterErrorBoundary>
+            <div className="min-h-screen bg-background">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/enroll" element={<EnrollmentForm />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/grades" element={<Grades />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/change-password" element={<ChangePassword />} />
+                <Route 
+                  path="/teacher-dashboard" 
+                  element={
+                    <AuthGuard allowedRoles={['teacher']}>
+                      <TeacherDashboard />
+                    </AuthGuard>
+                  } 
+                />
+                <Route 
+                  path="/student-dashboard" 
+                  element={
+                    <AuthGuard allowedRoles={['student']}>
+                      <StudentDashboard />
+                    </AuthGuard>
+                  } 
+                />
+                <Route 
+                  path="/teacher-management" 
+                  element={
+                    <AuthGuard allowedRoles={['admin']}>
+                      <TeacherManagement />
+                    </AuthGuard>
+                  } 
+                />
+                <Route 
+                  path="/student-applications" 
+                  element={
+                    <AuthGuard allowedRoles={['admin']}>
+                      <StudentApplications />
+                    </AuthGuard>
+                  } 
+                />
+                <Route 
+                  path="/admin" 
+                  element={
+                    <AuthGuard allowedRoles={['admin']}>
+                      <AdminDashboard />
+                    </AuthGuard>
+                  } 
+                />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+            <Toaster />
+            <Sonner />
+          </RouterErrorBoundary>
         </BrowserRouter>
       </QueryErrorBoundary>
     </QueryClientProvider>
