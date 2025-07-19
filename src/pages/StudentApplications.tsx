@@ -191,7 +191,7 @@ function StudentApplicationsContent() {
       toast({
         title: "✅ تم قبول الطلب",
         description: `تم قبول طلب ${application.full_name} وإرسال بيانات الدخول\n\nاسم المستخدم: ${credentials.username}\nكلمة المرور: ${credentials.password}`,
-        duration: 10000,
+        
       });
 
     } catch (error: any) {

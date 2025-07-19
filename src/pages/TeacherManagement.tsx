@@ -211,7 +211,7 @@ function TeacherManagementContent() {
       toast({
         title: "✅ تم بنجاح",
         description: `تم إضافة المعلم بنجاح وإرسال بيانات الدخول عبر الواتساب\n\n📱 اسم المستخدم: ${credentials.username}\n🔐 كلمة المرور: ${credentials.password}`,
-        duration: 10000,
+        
       });
 
     } catch (error: any) {
@@ -229,7 +229,7 @@ function TeacherManagementContent() {
         title: "❌ خطأ في إضافة المعلم",
         description: errorMessage,
         variant: "destructive",
-        duration: 8000,
+        
       });
     }
   };
