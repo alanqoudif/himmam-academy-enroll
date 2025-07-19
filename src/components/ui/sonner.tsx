@@ -1,29 +1,30 @@
-import { useTheme } from "next-themes"
-import { Toaster as Sonner, toast } from "sonner"
 
-type ToasterProps = React.ComponentProps<typeof Sonner>
+import * as React from "react";
 
-const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
-
-  return (
-    <Sonner
-      theme={theme as ToasterProps["theme"]}
-      className="toaster group"
-      toastOptions={{
-        classNames: {
-          toast:
-            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
-          description: "group-[.toast]:text-muted-foreground",
-          actionButton:
-            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
-          cancelButton:
-            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
-        },
-      }}
-      {...props}
-    />
-  )
+// Simple toast function for sonner compatibility
+export function toast(message: string | { title?: string; description?: string }) {
+  const toastMessage = typeof message === 'string' ? message : message.description || message.title || '';
+  
+  // Create a simple toast notification
+  const toastEl = document.createElement('div');
+  toastEl.className = 'fixed top-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50 max-w-sm';
+  toastEl.innerHTML = `
+    <div class="flex justify-between items-center">
+      <span class="text-gray-800">${toastMessage}</span>
+      <button class="ml-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.parentElement.remove()">×</button>
+    </div>
+  `;
+  
+  document.body.appendChild(toastEl);
+  
+  // Auto remove after 5 seconds
+  setTimeout(() => {
+    if (toastEl.parentNode) {
+      toastEl.parentNode.removeChild(toastEl);
+    }
+  }, 5000);
 }
 
-export { Toaster, toast }
+export function Toaster() {
+  return null; // Simple implementation
+}
